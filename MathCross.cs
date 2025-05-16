@@ -38,14 +38,14 @@ namespace MathCross
             exitButton = CreateMenuButton("Salir", 330);
 
             // Redirección al seleccionar "Jugar"
-              playButton.Click += (s, e) =>
+            playButton.Click += (s, e) =>
             {
                 GameSlotMenu gameSlotMenu = new GameSlotMenu();
                 gameSlotMenu.ShowDialog(); // Muestra como ventana modal
             };
 
             // Eventos
-            playButton.Click += (s, e) => MessageBox.Show("Jugar - funcionalidad aún no implementada.");
+            playButton.Click += (s, e) => MessageBox.Show;
             settingsButton.Click += (s, e) => MessageBox.Show("Configurar - funcionalidad aún no implementada.");
             infoButton.Click += (s, e) => MessageBox.Show("Información - funcionalidad aún no implementada.");
             exitButton.Click += (s, e) => ShowExitConfirmation();
