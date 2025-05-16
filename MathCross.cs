@@ -31,11 +31,18 @@ namespace MathCross
             titleLabel.Height = 100;
             this.Controls.Add(titleLabel);
 
-            // Crear botones
+            // Botones del menú
             playButton = CreateMenuButton("Jugar", 150);
             settingsButton = CreateMenuButton("Configurar", 210);
             infoButton = CreateMenuButton("Información", 270);
             exitButton = CreateMenuButton("Salir", 330);
+
+            // Redirección al seleccionar "Jugar"
+              playButton.Click += (s, e) =>
+            {
+                GameSlotMenu gameSlotMenu = new GameSlotMenu();
+                gameSlotMenu.ShowDialog(); // Muestra como ventana modal
+            };
 
             // Eventos
             playButton.Click += (s, e) => MessageBox.Show("Jugar - funcionalidad aún no implementada.");
