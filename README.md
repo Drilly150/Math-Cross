@@ -12,7 +12,7 @@ El juego contara contara con un menú de inicio, acompañado de las siguientes o
 
 3.-Creditos: Es para añadir los creditos. Es asi de simples. Puede ser nuestros nombres, acompañados de los plugins que se utilizaron, nombres de los gifs, animaciones, y creadores de los Albums de la anterior opción. Aunque este apartado se puede saltar simplemente colocando cada uno de los integrantes abajo, en una esquina a la derecha del menú en cuestión.
 
-4.-Salir: Simplemente eso. Salir del juego. Aunque ya se deberia de reemplantear si antes de salir del juego, debe aparecer una pestaña flotante en donde permita el guardar partida o todo se reiniciara cada vez que entras en el juego.
+4.-Salir: Simplemente eso. Salir del juego. Aunque ya se deberia de reemplantear si antes de salir del juego, debe aparecer un menú flotante en donde permita el guardar partida. Aunque esa idea puede estar implementada en la opcion de "Jugar". Tambien se debe pensar sobre el guardado afuera del juego, ya que no serviria de mucho que guardase el juego en slots y que cuando salgas, todo se reinicie.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
