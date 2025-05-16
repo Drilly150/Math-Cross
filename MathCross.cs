@@ -48,9 +48,9 @@ namespace MathCross
             playButton.Click += (s, e) => MessageBox.Show("Jugar - funcionalidad aún no implementada.");
             settingsButton.Click += (s, e) => MessageBox.Show("Configurar - funcionalidad aún no implementada.");
             infoButton.Click += (s, e) => MessageBox.Show("Información - funcionalidad aún no implementada.");
-            exitButton.Click += (s, e) => this.Close();
+            exitButton.Click += (s, e) => ShowExitConfirmation();
 
-            // Agregar al formulario
+            // Agregar botones al formulario
             this.Controls.Add(playButton);
             this.Controls.Add(settingsButton);
             this.Controls.Add(infoButton);
@@ -59,6 +59,94 @@ namespace MathCross
 
         private Button CreateMenuButton(string text, int top)
         {
+            private void ShowExitConfirmation()
+        {
+            Panel blurPanel = new Panel()
+            {
+                Size = this.ClientSize,
+                Location = new Point(0, 0),
+                BackColor = Color.FromArgb(100, 0, 0, 0),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+            this.Controls.Add(blurPanel);
+            blurPanel.BringToFront();
+        
+            Form confirmDialog = new Form()
+            {
+                Size = new Size(350, 180),
+                FormBorderStyle = FormBorderStyle.None,
+                StartPosition = FormStartPosition.CenterParent,
+                BackColor = Color.White,
+                ShowInTaskbar = false,
+                TopLevel = true,
+                Opacity = 0
+            };
+        
+            confirmDialog.StartPosition = FormStartPosition.Manual;
+            confirmDialog.Location = new Point(
+                this.Location.X + (this.Width - confirmDialog.Width) / 2,
+                this.Location.Y + (this.Height - confirmDialog.Height) / 2
+            );
+        
+            Label message = new Label()
+            {
+                Text = "¿Estás seguro de que deseas salir del juego?",
+                Font = new Font("Arial", 10, FontStyle.Regular),
+                AutoSize = false,
+                Size = new Size(300, 50),
+                Location = new Point(25, 20),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            confirmDialog.Controls.Add(message);
+        
+            Button cancelButton = new Button()
+            {
+                Text = "Cancelar",
+                Size = new Size(100, 35),
+                Location = new Point(50, 90),
+                BackColor = Color.LightGray,
+                Font = new Font("Arial", 10)
+            };
+            cancelButton.Click += (s, e) =>
+            {
+                confirmDialog.Close();
+                blurPanel.Dispose();
+            };
+            confirmDialog.Controls.Add(cancelButton);
+        
+            Button exitButton = new Button()
+            {
+                Text = "Salir",
+                Size = new Size(100, 35),
+                Location = new Point(180, 90),
+                BackColor = Color.IndianRed,
+                Font = new Font("Arial", 10),
+                ForeColor = Color.White
+            };
+            exitButton.Click += (s, e) =>
+            {
+                confirmDialog.Close();
+                this.Close();
+            };
+            confirmDialog.Controls.Add(exitButton);
+        
+            Timer fadeIn = new Timer();
+            fadeIn.Interval = 20;
+            fadeIn.Tick += (s, e) =>
+            {
+                if (confirmDialog.Opacity < 1)
+                {
+                    confirmDialog.Opacity += 0.05;
+                }
+                else
+                {
+                    fadeIn.Stop();
+                }
+            };
+            fadeIn.Start();
+        
+            confirmDialog.ShowDialog(this);
+        }
             Button button = new Button();
             button.Text = text;
             button.Font = new Font("Arial", 14, FontStyle.Regular);
