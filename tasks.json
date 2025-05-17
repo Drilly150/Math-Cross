@@ -3,11 +3,11 @@
   "tasks": [
     {
       "label": "build",
-      "command": "msbuild",
       "type": "shell",
+      "command": "msbuild",
       "args": [
-        "/property:GenerateFullPaths=true",
-        "/t:build",
+        "/t:Build",
+        "/p:Configuration=Debug",
         "${workspaceFolder}/MathCrossWinForms.csproj"
       ],
       "problemMatcher": "$msCompile"
