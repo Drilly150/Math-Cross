@@ -47,7 +47,7 @@ namespace MathCross
             // Eventos
             playButton.Click += (s, e) => MessageBox.Show;
             settingsButton.Click += (s, e) => MessageBox.Show("Configurar - funcionalidad aún no implementada.");
-            infoButton.Click += (s, e) => MessageBox.Show("Información - funcionalidad aún no implementada.");
+            infoButton.Click += (s, e) => ShowInfoPopup();
             exitButton.Click += (s, e) => ShowExitConfirmation();
 
             // Agregar botones al formulario
@@ -56,6 +56,107 @@ namespace MathCross
             this.Controls.Add(infoButton);
             this.Controls.Add(exitButton);
         }
+
+// A partir de aqui. Todo el codigo se basa en la pestaña flotante de Información.
+
+                private void ShowInfoPopup()
+        {
+            // Capa de desenfoque
+            Panel blurPanel = new Panel()
+            {
+                Size = this.ClientSize,
+                Location = new Point(0, 0),
+                BackColor = Color.FromArgb(120, 0, 0, 0),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+            this.Controls.Add(blurPanel);
+            blurPanel.BringToFront();
+
+            // Panel contenedor
+            Form infoForm = new Form()
+            {
+                Size = new Size(480, 400),
+                FormBorderStyle = FormBorderStyle.None,
+                StartPosition = FormStartPosition.Manual,
+                BackColor = Color.White,
+                ShowInTaskbar = false,
+                TopLevel = true,
+                Opacity = 0
+            };
+
+            infoForm.Location = new Point(
+                this.Location.X + (this.Width - infoForm.Width) / 2,
+                this.Location.Y + (this.Height - infoForm.Height) / 2
+            );
+
+            // ❌ Cerrar
+            Button closeBtn = new Button()
+            {
+                Text = "❌",
+                Font = new Font("Arial", 10, FontStyle.Bold),
+                Size = new Size(30, 30),
+                Location = new Point(infoForm.Width - 40, 10),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.LightGray
+            };
+            closeBtn.Click += (s, e) =>
+            {
+                infoForm.Close();
+                blurPanel.Dispose();
+            };
+            infoForm.Controls.Add(closeBtn);
+
+            // Cuadro con Scroll automático
+            Panel scrollablePanel = new Panel()
+            {
+                Location = new Point(30, 50),
+                Size = new Size(420, 300),
+                AutoScroll = true,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.WhiteSmoke
+            };
+
+            Label content = new Label()
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                MaximumSize = new Size(400, 0),
+                Text =
+                    "Math Cross es un juego de acertijos matemáticos tipo crucigrama.\n\n" +
+                    "📌 Objetivo:\n" +
+                    "- Coloca los números disponibles en las celdas vacías.\n" +
+                    "- Asegúrate que todas las ecuaciones horizontales y verticales sean válidas.\n\n" +
+                    "📌 Reglas del juego:\n" +
+                    "- Usa todos los números una sola vez.\n" +
+                    "- Cada fila y columna debe tener una operación correcta.\n" +
+                    "- Ganas estrellas si completas los niveles correctamente.\n" +
+                    "- Puedes obtener hasta 3 estrellas por nivel.\n" +
+                    "- Resolver rápido te da más puntos.\n\n" +
+                    "Disfruta mientras ejercitas tu mente con lógica, cálculo y estrategia."
+            };
+            scrollablePanel.Controls.Add(content);
+            infoForm.Controls.Add(scrollablePanel);
+
+            // Fade-in animación
+            Timer fadeIn = new Timer();
+            fadeIn.Interval = 20;
+            fadeIn.Tick += (s, e) =>
+            {
+                if (infoForm.Opacity < 1)
+                {
+                    infoForm.Opacity += 0.05;
+                }
+                else
+                {
+                    fadeIn.Stop();
+                }
+            };
+            fadeIn.Start();
+
+            infoForm.ShowDialog(this); // Modal
+        }
+
+// A partir de aqui. Todo el codigo se basa en la pestaña flotante de salida.
 
         private Button CreateMenuButton(string text, int top)
         {
