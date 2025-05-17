@@ -21,3 +21,4 @@ Su estilo grafico puede ser pixels art. Como ya se comento en los otros puntos. 
 Colaborador activo:
 Sebastian Salazar (Drilly150)
 Colocar tu nombre como colaborador.
+LOLOLOLOLOLOLOLOL
