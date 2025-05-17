@@ -56,8 +56,11 @@ namespace MathCross
             this.Controls.Add(infoButton);
             this.Controls.Add(exitButton);
         }
+    }
+}
 
-// A partir de aqui. Todo el codigo se basa en la pestaña flotante de Información.
+ // A partir de aqui. Todo el codigo se basa en la pestaña flotante de Información.
+
 
                 private void ShowInfoPopup()
         {
@@ -116,7 +119,7 @@ namespace MathCross
                 BackColor = Color.WhiteSmoke
             };
 
-            Label content = new Label()
+                    Label content = new Label()
             {
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Regular),
@@ -132,31 +135,68 @@ namespace MathCross
                     "- Ganas estrellas si completas los niveles correctamente.\n" +
                     "- Puedes obtener hasta 3 estrellas por nivel.\n" +
                     "- Resolver rápido te da más puntos.\n\n" +
-                    "Disfruta mientras ejercitas tu mente con lógica, cálculo y estrategia."
+                    "Disfruta mientras ejercitas tu mente con lógica, cálculo y estrategia.\n\n\n" +
+                    "---------------------------------------------\n" +
+                    "      INTEGRANTES DEL EQUIPO\n" +
+                    "---------------------------------------------\n\n"
             };
             scrollablePanel.Controls.Add(content);
             infoForm.Controls.Add(scrollablePanel);
 
-            // Fade-in animación
-            Timer fadeIn = new Timer();
-            fadeIn.Interval = 20;
-            fadeIn.Tick += (s, e) =>
-            {
-                if (infoForm.Opacity < 1)
-                {
-                    infoForm.Opacity += 0.05;
-                }
-                else
-                {
-                    fadeIn.Stop();
-                }
-            };
-            fadeIn.Start();
+            // Posición inicial para las imágenes de los integrantes
+            int baseY = content.Bottom + 20;
+            string[] nombres = { "Ana López", "Sebastian Salazar", "Lucía Torres" };
+            string[] rutas = { "integrante1.jpg", "integrante2.jpg", "integrante3.jpg" };
 
-            infoForm.ShowDialog(this); // Modal
+            // Crear fotos con nombres
+            for (int i = 0; i < 3; i++)
+            {
+                PictureBox foto = new PictureBox()
+                {
+                    Size = new Size(90, 90),
+                    Location = new Point(30 + i * 130, baseY),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    BorderStyle = BorderStyle.None
+                };
+
+                try
+                {
+                    // Cargar imagen y enmascarar en círculo
+                    Image original = Image.FromFile(rutas[i]);
+                    Bitmap circular = new Bitmap(foto.Width, foto.Height);
+                    using (Graphics g = Graphics.FromImage(circular))
+                    {
+                        using (Brush br = new TextureBrush(original))
+                        {
+                            GraphicsPath path = new GraphicsPath();
+                            path.AddEllipse(0, 0, foto.Width, foto.Height);
+                            g.SetClip(path);
+                            g.FillRectangle(br, 0, 0, foto.Width, foto.Height);
+                        }
+                    }
+                    foto.Image = circular;
+                }
+                catch
+                {
+                    // Imagen de respaldo
+                    foto.BackColor = Color.LightGray;
+                }
+
+                Label nombre = new Label()
+                {
+                    Text = nombres[i],
+                    Location = new Point(foto.Left - 10, foto.Bottom + 5),
+                    Size = new Size(110, 20),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Font = new Font("Segoe UI", 9, FontStyle.Bold)
+                };
+        fadeIn.Start();
+
+                scrollablePanel.Controls.Add(foto);
+            scrollablePanel.Controls.Add(nombre);
         }
 
-// A partir de aqui. Todo el codigo se basa en la pestaña flotante de salida.
+ // A partir de aqui. Todo el codigo se basa en la pestaña flotante de salida.
 
         private Button CreateMenuButton(string text, int top)
         {
@@ -248,6 +288,7 @@ namespace MathCross
         
             confirmDialog.ShowDialog(this);
         }
+        {
             Button button = new Button();
             button.Text = text;
             button.Font = new Font("Arial", 14, FontStyle.Regular);
@@ -275,6 +316,7 @@ namespace MathCross
 
         [STAThread]
         static void Main()
+
         {
             Application.EnableVisualStyles();
             Application.Run(new MainMenu());
