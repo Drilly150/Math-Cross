@@ -1,16 +1,16 @@
 {
   "version": "0.2.0",
   "configurations": [
-  {
-    "name": ".NET Core Launch (console)",
-    "type": "coreclr",
-    "request": "launch",
-    "preLaunchTask": "build",
-    "program": "${workspaceFolder}/bin/Debug/net48/MathCrossWinForms.exe",
-    "args": [],
-    "cwd": "${workspaceFolder}",
-    "stopAtEntry": false,
-    "console": "internalConsole"
-  }
+    {
+      "name": "Run WinForms App",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/Debug/net48/MathCrossWinForms.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
   ]
 }
