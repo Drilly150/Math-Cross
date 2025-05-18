@@ -89,3 +89,5 @@ namespace MathCross
         }
     }
 }
+
+//Este archivo solo se ejecuta cuando vas a crear una nueva partida. En el aparecera los tres tipo de dificultad que tendra el juego. Facil, Normal, Dificil. En donde luego al seleccionar la dificultad deseada, se ejecutara el archivo "LevelSelectMenu".

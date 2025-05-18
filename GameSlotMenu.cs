@@ -99,14 +99,37 @@ namespace MathCross
             };
 
             // Evento click (se implementa en otro paso)
-            panel.Click += (s, e) =>
+                        panel.Click += (s, e) =>
             {
                 if (saveStates[index] != null)
                 {
-                    MessageBox.Show($"Ya hay una partida guardada en el slot #{index + 1}.\nDificultad: {saveStates[index].Dificultad}");
+                    // Mostrar opciones: Continuar o Reiniciar
+                    SlotOptionsDialog optionsDialog = new SlotOptionsDialog(index);
+
+                    optionsDialog.OnContinueSelected += () =>
+                    {
+                        // Ir al menú de niveles
+                        this.Controls.Clear();
+                        LevelSelectMenu levelMenu = new LevelSelectMenu();
+                        levelMenu.OnCloseRequested += () => this.OnCloseRequested?.Invoke();
+                        this.Controls.Add(levelMenu);
+                    };
+
+                    optionsDialog.OnResetSelected += () =>
+                    {
+                        // Eliminar archivo del slot y refrescar
+                        SaveManager.DeleteSlot(index);
+                        this.Controls.Clear();
+                        GameSlotMenu refreshed = new GameSlotMenu();
+                        refreshed.OnCloseRequested += () => this.OnCloseRequested?.Invoke();
+                        this.Controls.Add(refreshed);
+                    };
+
+                    optionsDialog.ShowDialog(this);
                     return;
                 }
 
+                // Slot vacío → escoger dificultad
                 DifficultySelectionMenu diffMenu = new DifficultySelectionMenu();
                 diffMenu.Location = new Point((this.Width - diffMenu.Width) / 2, (this.Height - diffMenu.Height) / 2);
                 this.Controls.Clear();
@@ -124,16 +147,16 @@ namespace MathCross
                     SaveManager.SaveSlot(index, newData);
                     MessageBox.Show($"Dificultad '{difficulty}' guardada en slot {index + 1}.");
 
-                    // Refrescar todo
                     this.Controls.Clear();
                     GameSlotMenu refreshed = new GameSlotMenu();
                     refreshed.OnCloseRequested += () => this.OnCloseRequested?.Invoke();
                     this.Controls.Add(refreshed);
                 };
             };
-
             return panel;
         }
 
     }
 }
+
+//Como dice su nombre, en este archivo es donde se ejecuta el menu en donde aparecera los "slots". Que son tres apartados para guardar partidas. El cual al seleccionar alguno de los tres slots, se ejecutara el archivo "DifficultySelectionMenu".

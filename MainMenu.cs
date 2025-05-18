@@ -350,3 +350,5 @@ namespace MathCross
         }
     }
 }
+
+//Este es el archivo raíz de todo el codigo. Aqui se encuentra el menú, la opción de Informacion, y de salir. Antes solia llamarse "Math-Cross". Aunque prefiero llamarlo "MainMenu", ya que se sienta más (Profesional).
