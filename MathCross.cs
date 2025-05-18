@@ -37,10 +37,11 @@ namespace MathCross
             infoButton = CreateMenuButton("Información", 270);
             exitButton = CreateMenuButton("Salir", 330);
 
-            // Aqui hace un llamado al archivo "GameSlotMenu" en donde llamara el archivo para ejecutar la opcion de "Jugar"
+            // Redirección al seleccionar "Jugar"
             playButton.Click += (s, e) =>
             {
-                ShowGameSlotMenu();
+                GameSlotMenu gameSlotMenu = new GameSlotMenu();
+                gameSlotMenu.ShowDialog(); // Muestra como ventana modal
             };
 
             // Eventos
@@ -58,36 +59,8 @@ namespace MathCross
     }
 }
 
-// Este método se ejecuta a la hora de seleccionar el "Jugar". Aunque lo unico que hace es abrir un menú nuevo en donde apareceran los slots de partida y cerrarlos. 
-
-                private void ShowGameSlotMenu()
-        {
-            // Ocultar botones principales
-            playButton.Visible = false;
-            settingsButton.Visible = false;
-            infoButton.Visible = false;
-            exitButton.Visible = false;
-            titleLabel.Visible = false;
-
-            GameSlotMenu slotMenu = new GameSlotMenu();
-            slotMenu.Location = new Point((this.ClientSize.Width - slotMenu.Width) / 2, (this.ClientSize.Height - slotMenu.Height) / 2);
-            slotMenu.Anchor = AnchorStyles.None;
-            this.Controls.Add(slotMenu);
-            slotMenu.BringToFront();
-
-            // Al cerrar el slot, vuelve al menú
-            slotMenu.OnCloseRequested += () =>
-            {
-                this.Controls.Remove(slotMenu);
-                playButton.Visible = true;
-                settingsButton.Visible = true;
-                infoButton.Visible = true;
-                exitButton.Visible = true;
-                titleLabel.Visible = true;
-            };
-        }
-
  // A partir de aqui. Todo el codigo se basa en la pestaña flotante de Información.
+
 
                 private void ShowInfoPopup()
         {
@@ -350,5 +323,3 @@ namespace MathCross
         }
     }
 }
-
-//Este es el archivo raíz de todo el codigo. Aqui se encuentra el menú, la opción de Informacion, y de salir. Antes solia llamarse "Math-Cross". Aunque prefiero llamarlo "MainMenu", ya que se sienta más (Profesional).

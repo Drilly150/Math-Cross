@@ -198,7 +198,7 @@ namespace MathCross
             {
                 if (level.Bounds.Contains(e.Location) && level.Unlocked)
                 {
-                  if (selected == level)
+                    if (selected == level)
                     {
                         HideInfoPanel();
                         selected = null;
@@ -215,3 +215,5 @@ namespace MathCross
         }
     }
 }
+
+//Aquí se representara el menu en donde se veran los niveles. Que segun puedo pensar, se debe visualizar un menu con una distorsión de fondo, niveles conectados como si fueran grafos y pestaña que aparece desde la derecha que menciona el estado actual del nivel.
