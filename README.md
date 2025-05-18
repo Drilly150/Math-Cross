@@ -19,4 +19,4 @@ El juego contara contara con un menú de inicio, acompañado de las siguientes o
 Su estilo grafico puede ser pixels art. Como ya se comento en los otros puntos. Sin embargo, se debe investigar y ver que tan complicado es implementar tal estilo al juego. Si resulta ser complicado de añadir, se utilizara un estilo más tradicional. En cualquier caso, los estilos que se pretenden utilizar son basados en juegos indies como lo son: Balatro y Undertale.
 
 Colaborador activo:
-Sebastian Salazar (Drilly150)
+Sebastian Salazar (Drilly150)fafa
