@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace MathCross
 {
-    public class GameSlotMenu : Form
+    public class GameSlotMenu : UserControl
     {
         private Panel[] slotPanels = new Panel[3];
         private Label[] slotTitles = new Label[3];
@@ -12,35 +12,31 @@ namespace MathCross
         private Label[] slotInfo = new Label[3];
         private Button closeButton;
 
-        private string[] saveStates = { null, null, null }; // Simula el estado de las partidas
+        private SaveData[] saveStates = new SaveData[3];
+        // Simula el estado de las partidas
+
+        public event Action OnCloseRequested; // Evento para volver al menú
 
         public GameSlotMenu()
         {
-            this.Text = "Seleccionar Partida";
             this.Size = new Size(700, 600);
-            this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.White;
-            this.FormBorderStyle = FormBorderStyle.None;
 
-            // Botón de cerrar (esquina superior derecha)
             closeButton = new Button();
             closeButton.Text = "❌";
             closeButton.Font = new Font("Arial", 12, FontStyle.Bold);
             closeButton.Size = new Size(40, 40);
-            closeButton.Location = new Point(this.ClientSize.Width - 50, 10);
+            closeButton.Location = new Point(this.Width - 50, 10);
             closeButton.FlatStyle = FlatStyle.Flat;
-            closeButton.FlatAppearance.BorderSize = 1;
             closeButton.BackColor = Color.LightGray;
-            closeButton.Click += (s, e) => this.Close();
+            closeButton.Click += (s, e) => OnCloseRequested?.Invoke();
             this.Controls.Add(closeButton);
 
-            // Crear los 3 slots
             for (int i = 0; i < 3; i++)
             {
-                slotPanels[i] = CreateSlotPanel(i);
-                slotPanels[i].Location = new Point(75, 80 + i * 150);
-                this.Controls.Add(slotPanels[i]);
+                saveStates[i] = SaveManager.LoadSlot(i);
             }
+
         }
 
         private Panel CreateSlotPanel(int index)
@@ -51,17 +47,15 @@ namespace MathCross
             panel.BorderStyle = BorderStyle.FixedSingle;
             panel.Cursor = Cursors.Hand;
 
-            // Fecha
+            // Fecha de creación o guardado
             slotDates[index] = new Label();
-            slotDates[index].Text = "00/00/00";
             slotDates[index].Font = new Font("Arial", 9, FontStyle.Italic);
             slotDates[index].Location = new Point(10, 5);
             slotDates[index].Size = new Size(200, 15);
             panel.Controls.Add(slotDates[index]);
 
-            // Título principal del slot
+            // Título principal
             slotTitles[index] = new Label();
-            slotTitles[index].Text = saveStates[index] == null ? "Nueva partida" : $"Partida número {index + 1}";
             slotTitles[index].Font = new Font("Arial", 16, FontStyle.Bold);
             slotTitles[index].Location = new Point(10, 30);
             slotTitles[index].Size = new Size(400, 30);
@@ -69,12 +63,25 @@ namespace MathCross
 
             // Información de dificultad y estrellas
             slotInfo[index] = new Label();
-            slotInfo[index].Text = "Dificultad: --- | 0/30 estrellas";
             slotInfo[index].Font = new Font("Arial", 10, FontStyle.Regular);
             slotInfo[index].Location = new Point(300, 80);
             slotInfo[index].Size = new Size(230, 20);
             slotInfo[index].TextAlign = ContentAlignment.BottomRight;
             panel.Controls.Add(slotInfo[index]);
+
+            // ✅ Rellenar los valores según el estado del slot
+            if (saveStates[index] == null)
+            {
+                slotTitles[index].Text = "Nueva partida";
+                slotDates[index].Text = "00/00/00";
+                slotInfo[index].Text = "Dificultad: --- | 0/30 estrellas";
+            }
+            else
+            {
+                slotTitles[index].Text = $"Partida número {index + 1}";
+                slotDates[index].Text = saveStates[index].Fecha;
+                slotInfo[index].Text = $"Dificultad: {saveStates[index].Dificultad} | {saveStates[index].Estrellas}/30 estrellas";
+            }
 
             // Animación al pasar el mouse
             panel.MouseEnter += (s, e) =>
@@ -91,20 +98,42 @@ namespace MathCross
                 panel.Invalidate();
             };
 
+            // Evento click (se implementa en otro paso)
             panel.Click += (s, e) =>
             {
-                MessageBox.Show($"Seleccionaste el slot #{index + 1}");
-                // Aquí luego se puede cargar o crear una partida
+                if (saveStates[index] != null)
+                {
+                    MessageBox.Show($"Ya hay una partida guardada en el slot #{index + 1}.\nDificultad: {saveStates[index].Dificultad}");
+                    return;
+                }
+
+                DifficultySelectionMenu diffMenu = new DifficultySelectionMenu();
+                diffMenu.Location = new Point((this.Width - diffMenu.Width) / 2, (this.Height - diffMenu.Height) / 2);
+                this.Controls.Clear();
+                this.Controls.Add(diffMenu);
+
+                diffMenu.OnDifficultySelected += (difficulty) =>
+                {
+                    SaveData newData = new SaveData
+                    {
+                        Dificultad = difficulty,
+                        Fecha = DateTime.Now.ToString("dd/MM/yy"),
+                        Estrellas = 0
+                    };
+
+                    SaveManager.SaveSlot(index, newData);
+                    MessageBox.Show($"Dificultad '{difficulty}' guardada en slot {index + 1}.");
+
+                    // Refrescar todo
+                    this.Controls.Clear();
+                    GameSlotMenu refreshed = new GameSlotMenu();
+                    refreshed.OnCloseRequested += () => this.OnCloseRequested?.Invoke();
+                    this.Controls.Add(refreshed);
+                };
             };
 
             return panel;
         }
 
-        [STAThread]
-        static void Main()
-        {
-            Application.EnableVisualStyles();
-            Application.Run(new GameSlotMenu());
-        }
     }
 }
