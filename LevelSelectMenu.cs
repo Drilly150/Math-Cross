@@ -16,6 +16,7 @@ namespace MathCross
             public RectangleF Bounds => new RectangleF(Position.X - 20, Position.Y - 20, 40, 40);
             public int Estrellas;
             public int TiempoRecord;
+            public bool AnimarCompletado = false;
 
         }
 
@@ -33,6 +34,14 @@ namespace MathCross
         private Panel infoPanel;
 
         private Button closeButton;
+
+        private string nivelAResaltar;
+
+        public LevelSelectMenu(string nivelCompletado = null)
+        {
+            this.nivelAResaltar = nivelCompletado;
+            InitializeComponent();
+        }
 
         public event Action OnCloseRequested;
 
@@ -117,7 +126,8 @@ namespace MathCross
 
             for (int i = 0; i < count; i++)
             {
-                string id = $"P{i + 1}";
+                if (id == nivelAResaltar)
+    nodo.AnimarCompletado = true;
                 progreso.Niveles.TryGetValue(id, out var data);
 
                 levels.Add(new LevelNode
@@ -175,6 +185,9 @@ namespace MathCross
             foreach (var level in levels)
             {
                 Color fill = level.Unlocked ? Color.LimeGreen : Color.DarkGray;
+                if (level.AnimarCompletado)
+                    fill = Color.Gold; //Aquí en donde dice "Color.Gold", puede modificarse por por cualquier otro color, dejando eso si el "Color.(Color que deseas colocar)".
+
                 Brush nodeBrush = new SolidBrush(fill);
                 Pen border = new Pen(Color.White, selected == level ? 3 : 2);
 
@@ -182,7 +195,7 @@ namespace MathCross
                 g.DrawEllipse(border, level.Bounds);
 
                 using (Font font = new Font("Arial", 10, FontStyle.Bold))
-                using (Brush textBrush = new SolidBrush(Color.White))
+                using (Brush textBrush = new SolidBrush(Color.Black))
                 {
                     SizeF textSize = g.MeasureString(level.Name, font);
                     g.DrawString(level.Name, font, textBrush,
