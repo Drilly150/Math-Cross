@@ -58,12 +58,12 @@ namespace MathCross
             };
             resetBtn.Click += (s, e) =>
             {
-              ConfirmResetDialog confirm = new ConfirmResetDialog();
-              confirm.OnConfirmed += () =>
-              {
-                  OnResetSelected?.Invoke();
-              };
-              confirm.ShowDialog(this);
+                ConfirmResetDialog confirm = new ConfirmResetDialog();
+                confirm.OnConfirmed += () =>
+                {
+                    OnResetSelected?.Invoke();
+                };
+                confirm.ShowDialog(this);
             };
             this.Controls.Add(resetBtn);
         }
