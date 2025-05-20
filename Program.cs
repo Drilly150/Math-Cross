@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace MathCrossWinForms
+namespace MathCross
 {
     static class Program
     {
@@ -10,7 +10,10 @@ namespace MathCrossWinForms
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainMenu());
+
+            // Aquí debes tener tu formulario principal
+            MainMenu main = new MainMenu();
+            Application.Run(main);
         }
     }
 }
