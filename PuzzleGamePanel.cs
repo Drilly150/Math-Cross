@@ -264,6 +264,11 @@ namespace MathCross
                 segundosTranscurridos++;
                 lblTiempo.Text = $"Tiempo: {segundosTranscurridos / 60}:{(segundosTranscurridos % 60).ToString("D2")}";
             };
+
+                MusicWidget widget = new MusicWidget();
+                widget.Location = new Point(10, 300); // Ajusta según tu diseño
+                sidebar.Controls.Add(widget);
+
             gameTimer.Start();
         }
 

@@ -37,6 +37,37 @@ namespace MathCross
                 ReproducirAleatoria();
         }
 
+        private static int indiceActual = 0;
+        public static string PistaActual => Path.GetFileNameWithoutExtension(pistas.ElementAtOrDefault(indiceActual) ?? "Sin música");
+
+        public static void Siguiente()
+        {
+            if (pistas.Count == 0) return;
+            indiceActual = (indiceActual + 1) % pistas.Count;
+            ReproducirActual();
+        }
+
+        public static void Anterior()
+        {
+            if (pistas.Count == 0) return;
+            indiceActual = (indiceActual - 1 + pistas.Count) % pistas.Count;
+            ReproducirActual();
+        }
+
+        public static void PausarOContinuar()
+        {
+            if (reproductor.playState == WMPPlayState.wmppsPlaying)
+                reproductor.controls.pause();
+            else
+                reproductor.controls.play();
+        }
+
+        private static void ReproducirActual()
+        {
+            reproductor.URL = pistas[indiceActual];
+            reproductor.controls.play();
+        }
+
         public static void ReproducirAleatoria()
         {
             if (pistas.Count == 0) return;

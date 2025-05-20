@@ -47,6 +47,12 @@ namespace MathCross
             this.modoPractica = modoPractica;
             InitializeComponent();
 
+                MusicWidget widget = new MusicWidget();
+                widget.Location = new Point(this.Width - 320, this.Height - 120);
+                widget.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+                this.Controls.Add(widget);
+
+
             btnModoPractica = new Button()
             {
                 Text = "Modo práctica libre",
@@ -164,6 +170,7 @@ namespace MathCross
                     Unlocked = modoPractica || (data?.Desbloqueado ?? false),
                     Estrellas = data?.Estrellas ?? 0,
                     TiempoRecord = data?.TiempoRecord ?? 0
+                    TiempoPromedio = data?.TiempoPromedio ?? 0
                 });
             }
         }
@@ -185,6 +192,9 @@ namespace MathCross
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
+
+            string texto = $"Promedio: {nivel.TiempoPromedio}s";
+            g.DrawString(texto, fuente, pincel, x, y); // ajusta ubicación
 
             // Fondo distorsionado (simulado como franjas de colores)
             for (int i = 0; i < this.Height; i += 40)

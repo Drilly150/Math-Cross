@@ -12,10 +12,15 @@ namespace MathCross
     [Serializable]
     public class LevelData
     {
-        public bool Desbloqueado { get; set; } = false;
-        public int Estrellas { get; set; } = 0;
-        public int TiempoRecord { get; set; } = 0; // en segundos
-        public bool Completado => Estrellas > 0;
+        public bool Desbloqueado { get; set; }
+        public int Estrellas { get; set; }
+        public int TiempoRecord { get; set; }
+
+        // Nuevo:
+        public int TotalIntentos { get; set; }
+        public int TiempoAcumulado { get; set; } // en segundos
+
+        public int TiempoPromedio => TotalIntentos > 0 ? TiempoAcumulado / TotalIntentos : 0;
     }
 }
 

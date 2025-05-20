@@ -34,23 +34,28 @@ namespace MathCross
             File.WriteAllText(FilePath, json);
         }
 
-        public static void CompletarNivel(string nivel, int estrellas, int tiempo)
+        public static void CompletarNivel(string nivelId, int estrellas, int tiempoSegundos)
         {
-            var progress = Load();
-            if (!progress.Niveles.ContainsKey(nivel))
-                progress.Niveles[nivel] = new LevelData();
+            var progreso = Load();
+            if (!progreso.Niveles.TryGetValue(nivelId, out var data))
+            {
+                data = new LevelData();
+                progreso.Niveles[nivelId] = data;
+            }
 
-            var data = progress.Niveles[nivel];
-            data.Estrellas = Math.Max(data.Estrellas, estrellas);
-            data.TiempoRecord = (data.TiempoRecord == 0) ? tiempo : Math.Min(data.TiempoRecord, tiempo);
+            data.Desbloqueado = true;
 
-            int num = int.Parse(nivel.Substring(1));
-            string siguiente = $"P{num + 1}";
-            if (!progress.Niveles.ContainsKey(siguiente))
-                progress.Niveles[siguiente] = new LevelData();
-            progress.Niveles[siguiente].Desbloqueado = true;
+            if (estrellas > data.Estrellas)
+                data.Estrellas = estrellas;
 
-            Save(progress);
+            if (data.TiempoRecord == 0 || tiempoSegundos < data.TiempoRecord)
+                data.TiempoRecord = tiempoSegundos;
+
+            // 🔹 Actualizar promedio
+            data.TotalIntentos++;
+            data.TiempoAcumulado += tiempoSegundos;
+
+            Save(progreso);
         }
     }
 }
