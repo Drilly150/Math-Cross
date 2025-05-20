@@ -14,6 +14,14 @@ namespace MathCross
 
         public MainMenu()
         {
+            InitializeComponent();
+
+            GameStateManager.Inicializar(this, this); // Usa "this" como contenedor si todo va sobre MainMenu
+            GameStateManager.IrAlMenuPrincipal();
+            GameStateManager.Inicializar(this, contentPanel);
+
+            this.Controls.Add(mainPanel);
+
             // Propiedades generales de la ventana
             this.Text = "Math Cross - Menú Principal";
             this.Size = new Size(600, 500);
@@ -172,7 +180,7 @@ namespace MathCross
 
             // Posición inicial para las imágenes de los integrantes
             int baseY = content.Bottom + 20;
-            string[] nombres = { "Ana López", "Sebastian Salazar", "Lucía Torres" };
+            string[] nombres = { "Christopher Medina", "Sebastian Salazar", "Lucía Torres" };
             string[] rutas = { "integrante1.jpg", "integrante2.jpg", "integrante3.jpg" };
 
             // Crear fotos con nombres

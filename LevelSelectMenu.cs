@@ -7,6 +7,7 @@ namespace MathCross
 {
     public class LevelSelectMenu : UserControl
     {
+
         private class LevelNode
         {
             public string Name;
@@ -37,10 +38,34 @@ namespace MathCross
 
         private string nivelAResaltar;
 
-        public LevelSelectMenu(string nivelCompletado = null)
+        private Button btnModoPractica;
+        private bool modoPractica = false;
+
+        public LevelSelectMenu(string nivelCompletado = null, bool modoPractica = false)
         {
             this.nivelAResaltar = nivelCompletado;
+            this.modoPractica = modoPractica;
             InitializeComponent();
+
+            btnModoPractica = new Button()
+            {
+                Text = "Modo práctica libre",
+                Size = new Size(180, 35),
+                Location = new Point(this.Width - 200, 20),
+                BackColor = Color.LightBlue,
+                Font = new Font("Arial", 10),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+
+            btnModoPractica.Click += (s, e) =>
+            {
+                modoPractica = !modoPractica;
+                btnModoPractica.BackColor = modoPractica ? Color.DeepSkyBlue : Color.LightBlue;
+                RecalcularDesbloqueo(); // este método lo defines tú o usas GenerateLevels()
+                Invalidate(); // refrescar la vista
+            };
+
+            this.Controls.Add(btnModoPractica);
         }
 
         public event Action OnCloseRequested;
@@ -126,8 +151,9 @@ namespace MathCross
 
             for (int i = 0; i < count; i++)
             {
+                string id = $"P{i + 1}";
                 if (id == nivelAResaltar)
-    nodo.AnimarCompletado = true;
+                nodo.AnimarCompletado = true;
                 progreso.Niveles.TryGetValue(id, out var data);
 
                 levels.Add(new LevelNode
@@ -135,7 +161,7 @@ namespace MathCross
                     Name = id,
                     Position = new PointF(centerX, 100 + i * spacing),
                     Offset = (float)(rand.NextDouble() * 10),
-                    Unlocked = data?.Desbloqueado ?? false,
+                    Unlocked = modoPractica || (data?.Desbloqueado ?? false),
                     Estrellas = data?.Estrellas ?? 0,
                     TiempoRecord = data?.TiempoRecord ?? 0
                 });

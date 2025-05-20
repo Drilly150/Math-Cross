@@ -27,12 +27,29 @@ namespace MathCross
         private int pistasDisponibles = 3;
         private Button btnPista;
         private Label lblPistas;
-        
 
         private Panel estrellasPanel;
         private Button btnVolverMenu;
         private Button btnContinuarNivel;
         private Label felicidadesLabel;
+
+        private Button btnAtras;
+
+        private void CreateBackButton()
+        {
+            btnAtras = new Button()
+            {
+                Text = "← Atrás",
+                Size = new Size(80, 30),
+                Location = new Point(10, 10),
+                BackColor = Color.LightGray,
+                Font = new Font("Arial", 9)
+            };
+
+            btnAtras.Click += (s, e) => GameStateManager.VolverAtras();
+            this.Controls.Add(btnAtras);
+        }
+
 
         public PuzzleGamePanel();
         public string[,] GenerarPuzzle(int size, int porcentajeOcultas)
@@ -136,6 +153,11 @@ namespace MathCross
 
                     if (TodasLasCeldasLlenas())
                         VerificarTablero();
+
+                        if (!modoPractica)
+                            {
+                                LevelProgressManager.CompletarNivel(nivelActual, estrellas, segundosTranscurridos);
+                            }
                 }
             }
         }
@@ -484,6 +506,7 @@ namespace MathCross
 
             CreateGrid();
             CreateSidebar();
+            private bool modoPractica = false;
         }
 
         private void UsarPista()
