@@ -17,7 +17,28 @@ namespace MathCross
         {
             mainForm = formPrincipal;
             contenedor = areaPrincipal;
+
+            Configuracion = GameSettings.Cargar();
+            AplicarConfiguracionVisual();
         }
+
+        public static void AplicarConfiguracionVisual()
+        {
+            string[] resolucion = Configuracion.Resolucion.Split('x');
+            if (resolucion.Length == 2 &&
+                int.TryParse(resolucion[0], out int ancho) &&
+                int.TryParse(resolucion[1], out int alto))
+            {
+                mainForm.Size = new Size(ancho, alto);
+            }
+
+            mainForm.FormBorderStyle = Configuracion.PantallaCompleta ? FormBorderStyle.None : FormBorderStyle.Sizable;
+            mainForm.WindowState = Configuracion.PantallaCompleta ? FormWindowState.Maximized : FormWindowState.Normal;
+
+            mainForm.BackColor = Configuracion.TemaOscuro ? Color.FromArgb(30, 30, 30) : Color.White;
+        }
+
+        public static GameSettings Configuracion { get; private set; }
 
         public static void IrAlMenuPrincipal()
         {
@@ -71,5 +92,3 @@ namespace MathCross
 }
 
 //Este archivo unifica todo los menus que abarca el juego en cuestión.
-
-Vamos a trabajar con la opcion de configuracion del menu. En donde abarcara opciones como lo son la Resolucion de pantalla, Pantalla completa, Volumen, (el cual van a estar divididos por subcategorias para los efectos y sonido), una pequeña seccion de albumnes en donde el juego debe crear una carpeta y el usuario debe ingresar las musicas, ya sean independiente o una lista de musica de un artista dentro de una carpeta (La cual se puede considerar un album). Y una pequeño apartado en donde en claro o oscuro, dependiendo del color de la ventana (Que esta dentro del menu) diga; "Se compilo porque Dios quizo", "Que viva el porno furry", "Lo malo de una tetas, es que estan pegados a una mentirosa".

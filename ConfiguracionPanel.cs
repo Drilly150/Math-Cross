@@ -16,6 +16,8 @@ public class ConfiguracionPanel : UserControl
 
     private void InicializarComponentes()
     {
+        var config = GameStateManager.Configuracion;
+
         Label titulo = new Label()
         {
             Text = "Configuración",
@@ -34,14 +36,15 @@ public class ConfiguracionPanel : UserControl
         comboResolucion.Items.AddRange(new string[] {
             "800x600", "1024x768", "1280x720", "1920x1080"
         });
-        comboResolucion.SelectedIndex = 2; // por defecto
+        comboResolucion.SelectedItem = config.Resolucion;
         this.Controls.Add(comboResolucion);
 
         checkPantallaCompleta = new CheckBox()
         {
             Text = "Pantalla completa",
             Location = new Point(20, 110),
-            AutoSize = true
+            AutoSize = true,
+            Checked = config.PantallaCompleta
         };
         this.Controls.Add(checkPantallaCompleta);
 
@@ -59,7 +62,7 @@ public class ConfiguracionPanel : UserControl
             Width = 200,
             Minimum = 0,
             Maximum = 100,
-            Value = 70
+            Value = config.VolumenMusica
         };
         this.Controls.Add(volumenMusica);
 
@@ -76,7 +79,7 @@ public class ConfiguracionPanel : UserControl
             Width = 200,
             Minimum = 0,
             Maximum = 100,
-            Value = 70
+            Value = config.VolumenEfectos
         };
         this.Controls.Add(volumenEfectos);
 
@@ -85,7 +88,8 @@ public class ConfiguracionPanel : UserControl
         {
             Text = "Tema oscuro",
             Location = new Point(20, 290),
-            AutoSize = true
+            AutoSize = true,
+            Checked = config.TemaOscuro
         };
         checkTemaOscuro.CheckedChanged += (s, e) => ActualizarFrase();
         this.Controls.Add(checkTemaOscuro);
@@ -99,6 +103,35 @@ public class ConfiguracionPanel : UserControl
             AutoSize = true
         };
         this.Controls.Add(labelFrase);
+
+        // Mostrar frase correspondiente
+        ActualizarFrase();
+
+        // Botón para guardar configuración
+        Button btnGuardar = new Button()
+        {
+            Text = "Guardar configuración",
+            Location = new Point(20, 370),
+            Size = new Size(180, 30)
+        };
+
+        btnGuardar.Click += (s, e) =>
+        {
+            var nueva = GameStateManager.Configuracion;
+
+            nueva.Resolucion = comboResolucion.SelectedItem.ToString();
+            nueva.PantallaCompleta = checkPantallaCompleta.Checked;
+            nueva.VolumenMusica = volumenMusica.Value;
+            nueva.VolumenEfectos = volumenEfectos.Value;
+            nueva.TemaOscuro = checkTemaOscuro.Checked;
+
+            nueva.Guardar();
+            GameStateManager.AplicarConfiguracionVisual();
+            MusicManager.ActualizarVolumen(config.VolumenMusica);
+
+            MessageBox.Show("Configuración guardada");
+        };
+        this.Controls.Add(btnGuardar);
 
         // Crear carpeta de álbumes
         CrearCarpetaMusical();

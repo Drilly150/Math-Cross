@@ -16,6 +16,9 @@ namespace MathCross
         {
             InitializeComponent();
 
+            GameStateManager.Inicializar(this, this.mainPanel);
+            MusicManager.Inicializar();
+
             GameStateManager.Inicializar(this, this); // Usa "this" como contenedor si todo va sobre MainMenu
             GameStateManager.IrAlMenuPrincipal();
             GameStateManager.Inicializar(this, contentPanel);
@@ -180,7 +183,7 @@ namespace MathCross
 
             // Posición inicial para las imágenes de los integrantes
             int baseY = content.Bottom + 20;
-            string[] nombres = { "Christopher Medina", "Sebastian Salazar", "Lucía Torres" };
+            string[] nombres = { "Christopher Medina", "Sebastian Salazar", "Jesus Marquez" };
             string[] rutas = { "integrante1.jpg", "integrante2.jpg", "integrante3.jpg" };
 
             // Crear fotos con nombres
