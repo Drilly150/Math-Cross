@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <!-- Ejecutar como usuario normal -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <!-- Compatibilidad con Windows 10 -->
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+      <!-- (Opcional) Windows 11 -->
+      <supportedOS Id="{4f476546-937c-4874-8a3d-716d3be5d2cf}" />
+    </application>
+  </compatibility>
+
+  <!-- DPI Awareness -->
+  <asmv3:application xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
+    <asmv3:windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
+    </asmv3:windowsSettings>
+  </asmv3:application>
+
+</assembly>
