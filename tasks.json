@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "msbuild",
+      "args": [
+        "/t:Build",
+        "/p:Configuration=Release",
+        "${workspaceFolder}/MathCrossWinForms.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
+
+//Archivo de configuración para compilar el proyecto en Vs Code. Compila en modo "Release" usando "msbuild" antes de ejecutar.

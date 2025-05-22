@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run MathCross (Release)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/bin/Release/net48/MathCrossWinForms.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}
+
+//Archivo de configuración para lanzar el proyecto desde Visual Studio Code. Define cómo se ejecuta "MathCrossWinForms.exe". 
