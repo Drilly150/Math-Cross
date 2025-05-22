@@ -4,11 +4,11 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "msbuild",
+      "command": "dotnet", // CAMBIO AQUÍ: Usar 'dotnet'
       "args": [
-        "/t:Build",
-        "/p:Configuration=Release",
-        "${workspaceFolder}/MathCrossWinForms.csproj"
+        "build", // CAMBIO AQUÍ: 'build' como argumento para dotnet
+        "${workspaceFolder}/MathCrossWinForms.csproj",
+        "/p:Configuration=Release"
       ],
       "problemMatcher": "$msCompile",
       "group": {
