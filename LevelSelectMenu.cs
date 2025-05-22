@@ -151,7 +151,7 @@ namespace MathCross
                 musicWidget.Location = new Point(this.Width - musicWidget.Width - 20, this.Height - musicWidget.Height - 20);
                 infoPanel.Height = this.Height; // Ensure panel height matches menu height
             };
-              this.SizeChanged += (s, e) => {
+                this.SizeChanged += (s, e) => {
                 if(infoPanel != null) infoPanel.Height = this.Height; // Keep panel height updated
             };
         }

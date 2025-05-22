@@ -98,7 +98,7 @@ namespace MathCross
                     {
                         for (int c = 0; c <= dificultad.Size - EcuacionLayout.EquationLength; c+=2) // Start col must allow 5 cells
                         {
-                             potentialStarts.Add((r, c, true));
+                            potentialStarts.Add((r, c, true));
                         }
                     }
                 }
