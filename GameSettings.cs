@@ -42,3 +42,5 @@ namespace MathCross
         }
     }
 }
+
+//Se encarga de gestionar la configuracion del jugador entre los inicios se secciones. Como la resolución, sonido, pantalla completa, tema. Interactua con "GameStateManager" al igual que "ConfiguracionPanel". Se guardara la configuracion en "config.json" que se cargara automaticamente al iniciar el juego. En caso de que el jugador no lo tenga creado, se creara uno.

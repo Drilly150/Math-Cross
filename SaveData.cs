@@ -14,3 +14,5 @@ namespace MathCross
         public int Estrellas { get; set; } = 0;
     }
 }
+
+//Como sucede en "LevelProgress" y "LevelProgressManager". "SaveData" y "SaveManager" funcionan similar, pero esto es un guardado temporal por seccion. ¿A que me refiero? Que define el como guardara las cosas en cada uno de los Slots existentes. Y "SaveManager" se encargara de crear un archivo que lo guarde, aun cuando el juego se cierra.

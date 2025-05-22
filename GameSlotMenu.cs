@@ -195,3 +195,5 @@ namespace MathCross
         }
     }
 }
+
+//Pantalla para seleccionar o crear partidas guardadas en distintos slots. Guarda y carga el estado de cada partida. Permite reiniciar slots con confirmación y usa "GameStateManager" para navegar según la acción.

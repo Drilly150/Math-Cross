@@ -28,18 +28,18 @@ namespace MathCross
 
         private int panelTargetX;
         private LevelNode currentLevelShown;
-        private const int PanelWidth = 250; // Renamed for clarity PanelWidth instead of panelWidth
-        private bool panelVisible = false; // Kept for potential use, though state can be inferred
+        private const int PanelWidth = 250; // Renombrado para mayor claridad PanelWidth en lugar de panelWidth
+        private bool panelVisible = false; // Se conserva para un uso potencial, aunque se puede inferir su estado.
 
         private float backgroundOffset = 0;
         private Random rand = new Random();
-        private LevelNode selectedNode = null; // Renamed from 'selected' for clarity
+        private LevelNode selectedNode = null; // Se cambió el nombre de "seleccionado" para mayor claridad.
 
         private Button closeButton;
         private Button btnModoPractica;
-        private MusicWidget musicWidget; // Field for MusicWidget
+        private MusicWidget musicWidget; // Campo para MusicWidget
 
-        // Labels for infoPanel
+        // Etiquetas para el panel de InfoPanel
         private Label lblLevelName, lblLevelStars, lblLevelTime;
         private Button btnPlayLevel;
 
@@ -49,7 +49,7 @@ namespace MathCross
         public event Action OnCloseRequested;
         public event Action<string> RequestPlayLevel; // Event to signal playing a level
 
-        // Parameterless constructor calls the parameterized one with default values
+        // El constructor sin parámetros llama al constructor parametrizado con valores predeterminados
         public LevelSelectMenu() : this(null, false)
         {
         }
@@ -60,30 +60,30 @@ namespace MathCross
             this.Dock = DockStyle.Fill;
             this.BackColor = Color.Black;
 
-            // Initialize Timers
+            // Inicializar temporizadores
             animationTimer = new System.Windows.Forms.Timer();
             slideInTimer = new System.Windows.Forms.Timer();
             slideOutTimer = new System.Windows.Forms.Timer();
 
-            // Setup specific state from parameters
+            // Configurar un estado específico a partir de parámetros
             this.nivelAResaltar = nivelCompletado;
             this.modoPractica = modoPracticaJuego;
 
-            InitializeControls(); // Initialize all visual components and event handlers
+            InitializeControls(); // Inicializar todos los componentes visuales y controladores de eventos
 
-            GenerateLevels(); // Generate levels after state is set
+            GenerateLevels(); // Generar niveles después de establecer el estado
 
             animationTimer.Interval = 30;
             animationTimer.Tick += AnimationTimer_Tick;
             animationTimer.Start();
 
-            // Update btnModoPractica based on initial modoPractica state
+            // Actualizar btnModoPractica según el estado inicial de modoPractica
             btnModoPractica.BackColor = this.modoPractica ? Color.DeepSkyBlue : Color.LightBlue;
         }
 
         private void InitializeControls()
         {
-            // Close Button
+            // Botón de cerrar
             closeButton = new Button()
             {
                 Text = "❌",
@@ -100,8 +100,8 @@ namespace MathCross
             // Info Panel
             infoPanel = new Panel()
             {
-                Size = new Size(PanelWidth, this.Height), // Height will be adjusted
-                Location = new Point(this.Width, 0), // Starts hidden off-screen
+                Size = new Size(PanelWidth, this.Height), // Se ajustará la altura
+                Location = new Point(this.Width, 0), // Comienza oculto fuera de la pantalla.
                 BackColor = Color.FromArgb(30, 30, 30),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right
             };
@@ -118,19 +118,19 @@ namespace MathCross
             infoPanel.Controls.Add(btnPlayLevel);
             this.Controls.Add(infoPanel);
 
-            // Slide Timers Setup
+            // Configuración de temporizadores de diapositivas
             slideInTimer.Interval = 10;
             slideInTimer.Tick += SlideInTimer_Tick;
 
             slideOutTimer.Interval = 10;
             slideOutTimer.Tick += SlideOutTimer_Tick;
 
-            // Modo Práctica Button
+            // Botón de Modo Práctica 
             btnModoPractica = new Button()
             {
                 Text = "Modo práctica libre",
                 Size = new Size(180, 35),
-                // Location will be set in OnLoad or rely on Anchor
+                // La ubicación se establecerá en OnLoad o dependerá de Anchor
                 Font = new Font("Arial", 10),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
@@ -146,13 +146,13 @@ namespace MathCross
 
             this.Load += (s, e) =>
             {
-                // Set locations that depend on final Width/Height
+                // Establecer ubicaciones que dependen del ancho/alto final
                 btnModoPractica.Location = new Point(this.Width - btnModoPractica.Width - 20, 20);
                 musicWidget.Location = new Point(this.Width - musicWidget.Width - 20, this.Height - musicWidget.Height - 20);
-                infoPanel.Height = this.Height; // Ensure panel height matches menu height
+                infoPanel.Height = this.Height; // Asegúrese de que la altura del panel coincida con la altura del menú
             };
                 this.SizeChanged += (s, e) => {
-                if(infoPanel != null) infoPanel.Height = this.Height; // Keep panel height updated
+                if(infoPanel != null) infoPanel.Height = this.Height; // Mantenga la altura del panel actualizada
             };
         }
 
@@ -162,7 +162,7 @@ namespace MathCross
             modoPractica = !modoPractica;
             btnModoPractica.BackColor = modoPractica ? Color.DeepSkyBlue : Color.LightBlue;
             RecalcularDesbloqueoNiveles();
-            // Invalidate(); // RecalcularDesbloqueoNiveles already calls Invalidate
+            // Invalidate(); // RecalcularDesbloqueoNiveles llama a Invalidar
         }
 
         private void AnimationTimer_Tick(object sender, EventArgs e)
@@ -174,7 +174,7 @@ namespace MathCross
         {
             if (infoPanel.Left > panelTargetX)
             {
-                infoPanel.Left = Math.Max(panelTargetX, infoPanel.Left - 25); // Slightly faster animation
+                infoPanel.Left = Math.Max(panelTargetX, infoPanel.Left - 25); // Animación un poco más rápida
             }
             else
             {
@@ -188,14 +188,14 @@ namespace MathCross
         {
             if (infoPanel.Left < this.Width)
             {
-                infoPanel.Left = Math.Min(this.Width, infoPanel.Left + 25); // Slightly faster animation
+                infoPanel.Left = Math.Min(this.Width, infoPanel.Left + 25); // Animación un poco más rápida
             }
             else
             {
                 infoPanel.Left = this.Width;
                 slideOutTimer.Stop();
                 panelVisible = false;
-                currentLevelShown = null; // Clear selection once panel is hidden
+                currentLevelShown = null; // Borrar la selección una vez que el panel esté oculto
             }
         }
 
@@ -211,13 +211,13 @@ namespace MathCross
 
         private void GenerateLevels()
         {
-            levels.Clear(); // Clear existing levels before generating new ones
+            levels.Clear(); // Limpia los niveles existentes antes de generar nuevos
             var progreso = LevelProgressManager.Load();
             var NivelDataCollection = progreso?.Niveles;
 
-            int count = 5; // Number of levels
-            int spacing = 120; // Vertical spacing between levels
-            int centerX = this.Width / 3; // Position levels more centrally, avoiding infoPanel initial area
+            int count = 5; // Número de niveles
+            int spacing = 120; // Espaciado vertical entre niveles
+            int centerX = this.Width / 3; // Posicione los niveles más centralmente, evitando el área inicial del panel de información
 
             for (int i = 0; i < count; i++)
             {
@@ -228,8 +228,8 @@ namespace MathCross
                 {
                     Name = id,
                     Position = new PointF(centerX, 100 + i * spacing),
-                    Offset = (float)(rand.NextDouble() * Math.PI * 2), // Full circle for diverse start
-                    Unlocked = this.modoPractica || (data?.Desbloqueado ?? (i == 0 && !this.modoPractica)), // First level unlocked if no data & not practice
+                    Offset = (float)(rand.NextDouble() * Math.PI * 2), // Círculo completo para un comienzo diverso
+                    Unlocked = this.modoPractica || (data?.Desbloqueado ?? (i == 0 && !this.modoPractica)), // Primer nivel desbloqueado si no hay datos ni práctica
                     Estrellas = data?.Estrellas ?? 0,
                     TiempoRecord = data?.TiempoRecord ?? 0,
                     TiempoPromedio = data?.TiempoPromedio ?? 0,
@@ -261,16 +261,16 @@ namespace MathCross
         private void Animate()
         {
             backgroundOffset += 0.5f;
-            if (backgroundOffset > float.MaxValue - 100) backgroundOffset = 0; // Prevent overflow
+            if (backgroundOffset > float.MaxValue - 100) backgroundOffset = 0; // Prevenir desbordamientos
 
             for (int i = 0; i < levels.Count; i++)
             {
                 levels[i].Offset += 0.05f;
-                if (levels[i].Offset > float.MaxValue - 100) levels[i].Offset = 0; // Prevent overflow
+                if (levels[i].Offset > float.MaxValue - 100) levels[i].Offset = 0; // Prevenir desbordamientos
 
                 levels[i].Position = new PointF(
-                    levels[i].Position.X, // X position remains constant unless map scrolls
-                    100 + i * 120 + (float)Math.Sin(levels[i].Offset) * 8 // Slightly larger sway
+                    levels[i].Position.X, // La posición X permanece constante a menos que el mapa se desplace
+                    100 + i * 120 + (float)Math.Sin(levels[i].Offset) * 8 // Balanceo ligeramente mayor
                 );
             }
             Invalidate();
@@ -278,34 +278,34 @@ namespace MathCross
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e); // Call base method
+            base.OnPaint(e); // Llamar al método base
             Graphics g = e.Graphics;
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
 
-            // Background 
+            // Fondo
             for (int i = 0; i < this.Height; i += 40)
             {
                 int colorComponentOffset = (int)((i + backgroundOffset) % 80);
-                // Ensure color components are within valid range [0-255]
+                // Asegúrese de que los componentes de color estén dentro del rango válido [0-255]
                 int red = Math.Min(255, Math.Max(0, 20 + colorComponentOffset));
                 int blue = Math.Min(255, Math.Max(0, 40 + colorComponentOffset));
-                using (Brush b = new SolidBrush(Color.FromArgb(red, 20, blue))) // Green component is fixed
+                using (Brush b = new SolidBrush(Color.FromArgb(red, 20, blue))) // El componente verde es fijo
                 {
                     g.FillRectangle(b, 0, i, this.Width, 40);
                 }
             }
 
-            // Lines between nodes
+            // Líneas entre nodos
             if (levels.Count > 1)
             {
-                using (Pen linePen = new Pen(Color.FromArgb(150, Color.White), 2)) // Slightly transparent lines
+                using (Pen linePen = new Pen(Color.FromArgb(150, Color.White), 2)) // Líneas ligeramente transparentes
                 {
                     for (int i = 0; i < levels.Count - 1; i++)
                     {
-                        if (levels[i].Unlocked && levels[i+1].Unlocked) // Only draw lines between unlocked connected levels for clarity
+                        if (levels[i].Unlocked && levels[i+1].Unlocked) // Solo dibuje líneas entre los niveles conectados desbloqueados para mayor claridad
                             g.DrawLine(linePen, levels[i].Position, levels[i+1].Position);
-                        else if (levels[i].Unlocked && !levels[i+1].Unlocked && !modoPractica) // Optional: line to first locked level
+                        else if (levels[i].Unlocked && !levels[i+1].Unlocked && !modoPractica) // Opcional: línea al primer nivel bloqueado
                             g.DrawLine(Pens.DarkSlateGray, levels[i].Position, levels[i+1].Position);
 
 
@@ -313,8 +313,8 @@ namespace MathCross
                 }
             }
 
-            // Nodes
-            foreach (var levelNode in levels) // Changed variable name from level to levelNode
+            // Nodos
+            foreach (var levelNode in levels) // Se cambió el nombre de la variable de nivel a LevelNode
             {
                 Color fillColor;
                 if (levelNode.AnimarCompletado)
@@ -325,7 +325,7 @@ namespace MathCross
                     fillColor = Color.DarkGray;
 
                 using (Brush nodeBrush = new SolidBrush(fillColor))
-                using (Pen borderPen = new Pen(Color.White, selectedNode == levelNode ? 3 : 2)) // Use selectedNode
+                using (Pen borderPen = new Pen(Color.White, selectedNode == levelNode ? 3 : 2)) // Usa selectedNode
                 {
                     g.FillEllipse(nodeBrush, levelNode.Bounds);
                     g.DrawEllipse(borderPen, levelNode.Bounds);
@@ -348,12 +348,12 @@ namespace MathCross
 
             currentLevelShown = node;
             lblLevelName.Text = "Nivel: " + node.Name;
-            lblLevelStars.Text = "Estrellas: " + node.Estrellas + "/3"; // Assuming 3 stars max
+            lblLevelStars.Text = "Estrellas: " + node.Estrellas + "/3"; // Suponiendo 3 estrellas máximo
             lblLevelTime.Text = "Récord: " + (node.TiempoRecord > 0 ? node.TiempoRecord + "s" : "N/A");
             
-            infoPanel.Height = this.Height; // Ensure panel height is correct before sliding
+            infoPanel.Height = this.Height; // Asegúrese de que la altura del panel sea correcta antes de deslizarlo
             panelTargetX = this.Width - PanelWidth;
-            infoPanel.Visible = true; // Make sure panel is visible before starting animation
+            infoPanel.Visible = true; // Asegúrese de que el panel esté visible antes de comenzar la animación
             slideInTimer.Start();
         }
 
@@ -361,57 +361,57 @@ namespace MathCross
         {
             if (slideInTimer.Enabled) slideInTimer.Stop();
             
-            // currentLevelShown will be set to null when slideOut completes.
+            // currentLevelShown se establecerá en nulo cuando se complete el deslizamiento.
             slideOutTimer.Start();
-            // selectedNode = null; // Deselect the node is handled in OnMouseClick or when panel fully hides
-            // Invalidate(); // Redraw to show node deselected - will happen via OnMouseClick or animation
+            // selectedNode = null; // La deselección del nodo se realiza en OnMouseClick o cuando el panel se oculta por completo
+            // Invalidar(); // Redibujar para mostrar el nodo deseleccionado - sucederá a través de OnMouseClick o animación
         }
 
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
-            // Check if click is within the infoPanel if it's visible
+            //Comprueba si el clic está dentro del panel de información si está visible
             if (panelVisible && infoPanel.Bounds.Contains(e.Location))
             {
-                // Click was inside the panel, let panel controls handle it (e.g., play button)
+                // El clic estaba dentro del panel, deja que los controles del panel lo manejen (por ejemplo, el botón de reproducción)
                 return;
             }
 
             bool clickedOnNode = false;
-            foreach (var levelNode in levels) // Changed variable name
+            foreach (var levelNode in levels) // Se cambió el nombre de la variable
             {
                 if (levelNode.Bounds.Contains(e.Location))
                 {
                     clickedOnNode = true;
                     if (levelNode.Unlocked)
                     {
-                        if (selectedNode == levelNode) // Clicked on already selected node
+                        if (selectedNode == levelNode) // Hizo clic en el nodo ya seleccionado
                         {
-                            // Option 1: Hide panel (if game allows deselecting this way)
+                            // Opción 1: Ocultar el panel (si el juego permite deseleccionarlo de esta manera)
                             // HideInfoPanel();
                             // selectedNode = null;
 
-                            // Option 2: Or, if a level is selected, clicking it again could mean "Play"
-                            // For now, assume it might be an accidental double click, do nothing or play.
-                            // If play is desired here: BtnPlayLevel_Click(null, EventArgs.Empty);
+                            // Opción 2: O, si se selecciona un nivel, hacer clic en él nuevamente podría significar "Jugar"
+                            // Por ahora, supongamos que puede ser un doble clic accidental, no haga nada o juegue".
+                            //Si se desea reproducir aquí: BtnPlayLevel_Click(null, EventArgs.Empty);
                         }
-                        else // Clicked on a new, unlocked node
+                        else // Hice clic en un nodo nuevo y desbloqueado
                         {
                             selectedNode = levelNode;
                             ShowInfoPanel(levelNode);
                         }
                     }
-                    else // Clicked on a locked node
+                    else // Hizo clic en un nodo bloqueado
                     {
-                        // Optionally, provide feedback like a "locked" sound or small animation
-                        if (panelVisible) HideInfoPanel(); // Hide panel if it was showing another level
-                        selectedNode = null; // Deselect any previously selected node
+                        // Opcionalmente, proporcione comentarios como un sonido de "bloqueo" o una pequeña animación.
+                        if (panelVisible) HideInfoPanel(); // Ocultar el panel si estaba mostrando otro nivel
+                        selectedNode = null; // Deseleccionar cualquier nodo seleccionado previamente
                     }
-                    Invalidate(); // Redraw to show selection changes
+                    Invalidate(); // Redibujar para mostrar los cambios de selección
                     break; 
                 }
             }
 
-            if (!clickedOnNode && panelVisible) // Clicked outside any node while panel is visible
+            if (!clickedOnNode && panelVisible) // Se hizo clic fuera de cualquier nodo mientras el panel estaba visible
             {
                 HideInfoPanel();
                 selectedNode = null;
@@ -420,3 +420,7 @@ namespace MathCross
         }
     }
 }
+
+//Aquí se representara el menu en donde se veran los niveles. Usa "LevelProgressManager" para saber qué niveles están desbloqueados. Usa "GameStateManager" para navegar hacia "PuzzleGamePanel". Contiene la lógica para el uso del modo práctica libre e integra el "MusicWidget" para mostrar pista actuales.
+
+//El aspecto del menu de niveles. Según a los Promts que le he estado dando a ChatGPT. La forma de visualizarse el menu es con una distorsión de fondo, niveles conectados entre si como si fueran grafos y una pestaña que aparece desde la derecha al tocar un nivel y que menciona el estado actual del nivel.

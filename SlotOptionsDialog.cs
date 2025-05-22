@@ -101,3 +101,4 @@ namespace MathCross
     }
 }
 
+//Este archivo funciona principalmente para la hora de saber que hacer con la partida ya seleccionada, en caso de ya tener una partida guardada. Abriendo un Menú dentro del juego que dice "Reanudar" o "Reiniciar". En el caso de Reanudar, no pasa nada. Simplemente se ejecuta el archivo de "LevelSelectMenu". En caso de seleccionar Reiniciar, se ejecuta el archivo "ConfirmResertDialog". 

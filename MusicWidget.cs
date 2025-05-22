@@ -15,7 +15,7 @@ namespace MathCross
         private float angulo = 0;
 
         /// <summary>
-        /// Constructor del MusicWidget. Inicializa los controles visuales
+        /// Constructor del MusicWidget. Inicialice los controles visuales
         /// para mostrar la pista actual y permitir el control de la reproducción.
         /// </summary>
         public MusicWidget()
@@ -132,3 +132,5 @@ namespace MathCross
         }
     }
 }
+
+//Módelo visual que muestra la pista actual y permite controlarla (play/pausa, anterior, siguiente). Interactua con "MusicManager", el cual controla. Insertado en "LevelSelectMenu" y "PuzzleGamePanel". 

@@ -6,33 +6,33 @@ namespace MathCross
 {
     public class DifficultySelectionMenu : UserControl
     {
-        // Event that is triggered when a difficulty is selected.
+        // Evento que se activa cuando se selecciona una dificultad.
         public event Action<string> OnDifficultySelected;
 
-        // Buttons for each difficulty level.
+        // Botones para cada nivel de dificultad.
         private Button easyButton, normalButton, hardButton;
-        // Stores the currently selected difficulty. It's null until a selection is made.
+        // Almacena la dificultad seleccionada. Es nula hasta que se selecciona una opción.
         private string selectedDifficulty = null;
 
         public DifficultySelectionMenu()
         {
-            // Basic setup for the UserControl.
-            this.Size = new Size(500, 300); // Sets the size of the menu.
-            this.BackColor = Color.White;   // Sets the background color.
-
-            // Title label for the menu.
+            // Configuración básica para el UserControl.
+            this.Size = new Size(500, 300); // Establece el tamaño del menú.
+            this.BackColor = Color.White;   // Establece el color de fondo.
+            
+            // Etiqueta de título para el menú.
             Label title = new Label()
             {
-                Text = "Selecciona la dificultad", // Text displayed on the label.
-                Font = new Font("Arial", 18, FontStyle.Bold), // Font for the title.
-                Size = new Size(500, 40), // Size of the label.
-                TextAlign = ContentAlignment.MiddleCenter, // Centers the text within the label.
-                Location = new Point(0, 30) // Position of the label.
+                Text = "Selecciona la dificultad", // Texto que se muestra en la etiqueta.
+                Font = new Font("Arial", 18, FontStyle.Bold), // Fuente para el título.
+                Size = new Size(500, 40), // Tamaño de la etiqueta.
+                TextAlign = ContentAlignment.MiddleCenter, // Centra el texto dentro de la etiqueta.
+                Location = new Point(0, 30) // Posición de la etiqueta.
             };
-            this.Controls.Add(title); // Adds the label to the control.
+            this.Controls.Add(title); // Agrega la etiqueta al control.
 
-            // Create and add difficulty buttons.
-            // Each button is created with its text, hover color, and vertical position.
+            // Crea y añade botones de dificultad.
+            // Cada botón se crea con su texto, color al pasar el mouse y posición vertical.
             easyButton = CreateDifficultyButton("Fácil", Color.SkyBlue, 60);
             normalButton = CreateDifficultyButton("Normal", Color.Gold, 120);
             hardButton = CreateDifficultyButton("Difícil", Color.IndianRed, 180);
@@ -43,56 +43,56 @@ namespace MathCross
         }
 
         /// <summary>
-        /// Creates a styled button for difficulty selection.
+        ///Crea un botón con estilo para seleccionar la dificultad.
         /// </summary>
-        /// <param name="text">The text to display on the button (e.g., "Fácil").</param>
-        /// <param name="hoverColor">The color the button changes to on hover and when selected.</param>
-        /// <param name="top">The Y-coordinate for the button's position.</param>
-        /// <returns>A configured Button control.</returns>
+        /// <param name="text">El texto que se mostrará en el botón (por ejemplo, "Fácil").</param>
+        /// <param name="hoverColor">El color al que cambia el botón al pasar el mouse sobre él y cuando se selecciona.</param>
+        /// <param name="top">La coordenada Y para la posición del botón.</param>
+        /// <returns>Un control de botón configurado.</returns>
         private Button CreateDifficultyButton(string text, Color hoverColor, int top)
         {
             Button btn = new Button();
-            btn.Text = text; // Sets the button text.
-            btn.Font = new Font("Arial", 14, FontStyle.Bold); // Sets the button font.
-            btn.Size = new Size(200, 40); // Sets the button size.
-            // Centers the button horizontally within the control.
+            btn.Text = text; // Establece el texto del botón.
+            btn.Font = new Font("Arial", 14, FontStyle.Bold); // Establece la fuente del botón.
+            btn.Size = new Size(200, 40); // Establece el tamaño del botón.
+            // Centra el botón horizontalmente dentro del control.
             btn.Location = new Point((this.Width - btn.Width) / 2, top);
-            btn.FlatStyle = FlatStyle.Flat; // Gives the button a flat appearance.
-            btn.BackColor = Color.White;    // Default background color.
-            btn.ForeColor = Color.Black;    // Default text color.
+            btn.FlatStyle = FlatStyle.Flat; // Da al botón una apariencia plana.
+            btn.BackColor = Color.White;    // Color de fondo predeterminado.
+            btn.ForeColor = Color.Black;    // Color de texto predeterminado.
 
-            // Event handler for when the mouse enters the button area.
+            // Controlador de eventos para cuando el mouse ingresa al área del botón.
             btn.MouseEnter += (s, e) =>
             {
-                // Change color on hover only if no difficulty has been selected yet.
+                // Cambia de color al pasar el cursor solo si aún no se ha seleccionado ninguna dificultad.
                 if (selectedDifficulty == null)
                 {
                     btn.BackColor = hoverColor;
                 }
             };
 
-            // Event handler for when the mouse leaves the button area.
+            // Controlador de eventos para cuando el mouse abandona el área del botón.
             btn.MouseLeave += (s, e) =>
             {
-                // Reset color if the button is enabled AND
-                // (no difficulty is selected OR this button is not the selected one).
-                // This prevents changing the color of disabled buttons or the selected button.
+                // Restablecer color si el botón está habilitado Y
+                // (no se ha seleccionado ninguna dificultad O este botón no es el seleccionado).
+                // Esto evita cambiar el color de los botones deshabilitados o del botón seleccionado.
                 if (btn.Enabled && (selectedDifficulty == null || btn.Text != selectedDifficulty))
                 {
                     btn.BackColor = Color.White;
                 }
             };
 
-            // Event handler for when the button is clicked.
+            // Controlador de eventos para cuando se hace clic en el botón.
             btn.Click += (s, e) =>
             {
-                // Only proceed if no difficulty has been selected yet (one-time selection).
+                // Proceda sólo si aún no ha seleccionado ninguna dificultad (selección única).
                 if (selectedDifficulty == null)
                 {
-                    selectedDifficulty = text; // Set the selected difficulty.
-                    btn.BackColor = hoverColor; // Explicitly set the selected button's color.
-                    DisableOtherButtons(btn);   // Disable other buttons.
-                    OnDifficultySelected?.Invoke(text); // Trigger the event.
+                    selectedDifficulty = text; // Establezca la dificultad seleccionada.
+                    btn.BackColor = hoverColor; // Establezca explícitamente el color del botón seleccionado.
+                    DisableOtherButtons(btn);   // Deshabilitar otros botones.
+                    OnDifficultySelected?.Invoke(text); // Desencadenar el evento.
                 }
             };
 
@@ -100,20 +100,20 @@ namespace MathCross
         }
 
         /// <summary>
-        /// Disables all buttons in the control except for the one that was selected.
-        /// Also changes the background color of disabled buttons to indicate they are inactive.
+        /// Desactiva todos los botones del control excepto el que fue seleccionado.
+        /// También cambia el color de fondo de los botones deshabilitados para indicar que están inactivos.
         /// </summary>
-        /// <param name="selected">The button that was clicked and selected.</param>
+        /// <param name="selected">El botón en el que se hizo clic y se seleccionó.</param>
         private void DisableOtherButtons(Button selected)
         {
-            // Iterate through all controls on the form.
+            // Iterar a través de todos los controles del formulario.
             foreach (Control ctrl in this.Controls)
             {
-                // Check if the control is a Button and is not the selected button.
+                // Comprueba si el control es un Botón y no es el botón seleccionado.
                 if (ctrl is Button btn && btn != selected)
                 {
-                    btn.Enabled = false; // Disable the button.
-                    btn.BackColor = Color.LightGray; // Change its background color.
+                    btn.Enabled = false; // Desactiva el botón.
+                    btn.BackColor = Color.LightGray; // Cambiar su color de fondo.
                 }
             }
         }

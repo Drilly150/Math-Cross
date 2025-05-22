@@ -13,10 +13,10 @@ namespace MathCross
 
             try
             {
-                // Initialize core game systems
+                // Inicializar los sistemas básicos del juego
                 GameStateManager.Initialize();
 
-                // Start the main menu
+                //Iniciar el menú principal
                 Application.Run(new MainMenu());
             }
             catch (Exception ex)

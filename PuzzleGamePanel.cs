@@ -836,3 +836,5 @@ namespace MathCross
         }
     }
 }
+
+//La pantalla principal del juego donde se juega el Puzzle. Carga un puzzle desde "PuzzleGenerator". Usa "MusicWidget" en el panel lateral. Usa "GameStateManager" para guardar estrellas y volver al menú y por ultimo, utiliza "LevelProgressManager" para guardar tiempo, estrellas y promedio del nivel. 

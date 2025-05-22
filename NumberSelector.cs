@@ -52,3 +52,5 @@ namespace MathCross
         }
     }
 }
+
+//Es una clase auxiliar de "PuzzleGamePanel". Realmente no se que hace. Me da paja explicar. Pero es parte de la generación de los niveles.

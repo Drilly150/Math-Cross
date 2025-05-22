@@ -70,3 +70,5 @@ namespace MathCross
         }
     }
 }
+
+//Guarda y carga el progreso del jugador por nivel. Interactua con "PuzzleGamePanel" cuando terminas un nivel y utilizado por "LevelSelectMenu" para desbloquear niveles y mostrar estrellas, récords, tiempo promedio.
