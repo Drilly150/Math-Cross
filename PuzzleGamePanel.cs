@@ -679,7 +679,7 @@ namespace MathCross
                 int c = esHorizontal ? i : index;
                 if (r < gridSize && c < gridSize) // Comprobación de límites
                 {
-                     cellButtons[r, c].BackColor = colorResaltado;
+                    cellButtons[r, c].BackColor = colorResaltado;
                 }
             }
 
@@ -698,7 +698,7 @@ namespace MathCross
                         {
                             // Si fue pista simple, podría tener LightGreen, mantenerlo.
                             // Si no, es White.
-                             cellButtons[r,c].BackColor = cellButtons[r,c].BackColor == Color.LightGreen ? Color.LightGreen : colorOriginalCeldaEditable;
+                            cellButtons[r,c].BackColor = cellButtons[r,c].BackColor == Color.LightGreen ? Color.LightGreen : colorOriginalCeldaEditable;
                         }
                         else // Celda fija (operador, =, o pista inicial)
                         {
