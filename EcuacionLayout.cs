@@ -11,7 +11,7 @@ namespace MathCross
         public string A;
         public string Op;
         public string B;
-        public string Igual = "=";
+        public readonly string Igual = "="; // Made readonly
         public string Resultado;
 
         public List<(int row, int col, string valor)> GetTokens()
@@ -28,7 +28,7 @@ namespace MathCross
                     2 => B,
                     3 => Igual,
                     4 => Resultado,
-                    _ => ""
+                    _ => "" // Should not be reached with the current loop
                 };
                 tokens.Add((r, c, val));
             }
@@ -36,3 +36,4 @@ namespace MathCross
         }
     }
 }
+

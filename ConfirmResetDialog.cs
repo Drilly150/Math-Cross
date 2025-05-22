@@ -4,10 +4,21 @@ using System.Windows.Forms;
 
 namespace MathCross
 {
+    /// <summary>
+    /// Diálogo de confirmación que solicita al usuario si desea reiniciar una partida.
+    /// Emite un evento cuando el usuario confirma el reinicio.
+    /// </summary>
     public class ConfirmResetDialog : Form
     {
+        /// <summary>
+        /// Evento que se dispara cuando el usuario confirma el reinicio de la partida.
+        /// </summary>
         public event Action OnConfirmed;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del diálogo de confirmación de reinicio.
+        /// Configura la apariencia del diálogo y los botones de acción.
+        /// </summary>
         public ConfirmResetDialog()
         {
             this.Size = new Size(320, 160);
@@ -18,6 +29,7 @@ namespace MathCross
             this.MaximizeBox = false;
             this.MinimizeBox = false;
 
+            // Etiqueta de mensaje para preguntar al usuario
             Label message = new Label()
             {
                 Text = "¿Estás seguro de que deseas reiniciar esta partida?",
@@ -29,7 +41,7 @@ namespace MathCross
             };
             this.Controls.Add(message);
 
-            // Botón "Sí"
+            // Botón "Sí" (para confirmar el reinicio)
             Button yesBtn = new Button()
             {
                 Text = "Sí",
@@ -41,8 +53,9 @@ namespace MathCross
             };
             yesBtn.Click += (s, e) =>
             {
-                OnConfirmed?.Invoke();
-                this.Close();
+                OnConfirmed?.Invoke(); // Dispara el evento de confirmación
+                this.DialogResult = DialogResult.OK; // Establece el resultado del diálogo a OK
+                this.Close(); // Cierra el diálogo
             };
             this.Controls.Add(yesBtn);
 
@@ -55,10 +68,14 @@ namespace MathCross
                 BackColor = Color.LightGray,
                 Font = new Font("Arial", 10)
             };
-            cancelBtn.Click += (s, e) => this.Close();
+            cancelBtn.Click += (s, e) =>
+            {
+                this.DialogResult = DialogResult.Cancel; // Establece el resultado del diálogo a Cancel
+                this.Close(); // Cierra el diálogo
+            };
             this.Controls.Add(cancelBtn);
         }
     }
 }
 
-//Este archivo es la continuacion del "SlotOptionsDialog", el cual se ejecuta a la hora de seleccionar el Reiniciar. En donde lanzara una cuadro que dira "¿Estas seguro?". Haciendo referencia a que si deseas eliminar/reiniciar partida.
+//Este archivo es la continuacion del "SlotOptionsDialog", el cual se ejecuta a la hora de seleccionar el Reiniciar en vez de continuar en el slot donde se guarda la partida. En donde lanzara una cuadro que dira "¿Estas seguro?". Haciendo referencia a que si deseas eliminar/reiniciar partida.

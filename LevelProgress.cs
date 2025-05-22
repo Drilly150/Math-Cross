@@ -6,16 +6,26 @@ namespace MathCross
     [Serializable]
     public class LevelProgress
     {
-        public Dictionary<string, LevelData> Niveles { get; set; } = new Dictionary<string, LevelData>();
+        public Dictionary<string, LevelData> Levels { get; set; } = new Dictionary<string, LevelData>();
     }
 
     [Serializable]
     public class LevelData
     {
-        public bool Desbloqueado { get; set; } = false;
-        public int Estrellas { get; set; } = 0;
-        public int TiempoRecord { get; set; } = 0; // en segundos
-        public bool Completado => Estrellas > 0;
+        public bool IsUnlocked { get; set; }
+        public int Stars { get; set; }
+        public int RecordTime { get; set; }
+        
+        private int _totalAttempts;
+        public int TotalAttempts
+        {
+            get => _totalAttempts;
+            set => _totalAttempts = value >= 0 ? value : 0;
+        }
+
+        public int CumulativeTime { get; set; } // en segundos
+
+        public float AverageTime => TotalAttempts > 0 ? (float)CumulativeTime / TotalAttempts : 0f;
     }
 }
 

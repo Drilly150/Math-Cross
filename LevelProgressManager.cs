@@ -12,9 +12,9 @@ namespace MathCross
         {
             if (!File.Exists(FilePath))
             {
-                var fresh = new LevelProgress();
-                fresh.Niveles["P1"] = new LevelData { Desbloqueado = true };
-                return fresh;
+                var freshProgress = new LevelProgress();
+                freshProgress.Levels.TryAdd("P1", new LevelData { IsUnlocked = true });
+                return freshProgress;
             }
 
             try
@@ -22,33 +22,49 @@ namespace MathCross
                 string json = File.ReadAllText(FilePath);
                 return JsonSerializer.Deserialize<LevelProgress>(json);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error loading progress: {ex.Message}");
                 return new LevelProgress();
             }
         }
 
         public static void Save(LevelProgress progress)
         {
-            string json = JsonSerializer.Serialize(progress, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(FilePath, json);
+            try
+            {
+                string json = JsonSerializer.Serialize(progress, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(FilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving progress: {ex.Message}");
+                throw; // Opcional: Relanzar para manejo externo
+            }
         }
 
-        public static void CompletarNivel(string nivel, int estrellas, int tiempo)
+        public static void CompleteLevel(string levelId, int stars, int timeSeconds)
         {
+            if (string.IsNullOrEmpty(levelId))
+                throw new ArgumentException("Level ID cannot be null or empty.");
+
+            if (stars < 0 || timeSeconds < 0)
+                throw new ArgumentException("Stars and time cannot be negative.");
+
             var progress = Load();
-            if (!progress.Niveles.ContainsKey(nivel))
-                progress.Niveles[nivel] = new LevelData();
+            if (!progress.Levels.TryGetValue(levelId, out var data))
+            {
+                data = new LevelData();
+                progress.Levels[levelId] = data;
+            }
 
-            var data = progress.Niveles[nivel];
-            data.Estrellas = Math.Max(data.Estrellas, estrellas);
-            data.TiempoRecord = (data.TiempoRecord == 0) ? tiempo : Math.Min(data.TiempoRecord, tiempo);
+            data.IsUnlocked = true;
+            data.Stars = Math.Max(stars, data.Stars);
+            data.RecordTime = (data.RecordTime == 0 || timeSeconds < data.RecordTime) ? timeSeconds : data.RecordTime;
 
-            int num = int.Parse(nivel.Substring(1));
-            string siguiente = $"P{num + 1}";
-            if (!progress.Niveles.ContainsKey(siguiente))
-                progress.Niveles[siguiente] = new LevelData();
-            progress.Niveles[siguiente].Desbloqueado = true;
+            // Actualizar métricas
+            data.TotalAttempts++;
+            data.CumulativeTime += timeSeconds;
 
             Save(progress);
         }

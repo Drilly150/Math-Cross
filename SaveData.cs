@@ -2,13 +2,15 @@ using System;
 
 namespace MathCross
 {
-    [Serializable]
+    /// <summary>
+    /// Representa los datos de una partida guardada, incluyendo dificultad, fecha y estrellas.
+    /// Esta clase es serializable para permitir su almacenamiento en archivos.
+    /// </summary>
+    [Serializable] // Se mantiene para compatibilidad o futuros usos con otros serializadores.
     public class SaveData
     {
         public string Dificultad { get; set; } = "---";
-        public string Fecha { get; set; } = "00/00/00";
+        public string Fecha { get; set; } = "00/00/00"; // Se recomienda usar DateTime para fechas
         public int Estrellas { get; set; } = 0;
     }
 }
-
-//Como sucede en "LevelProgress" y "LevelProgressManager". "SaveData" y "SaveManager" funcionan similar, pero esto es un guardado temporal por seccion. ¿A que me refiero? Que solo guarda la partida mientras tenga el juego abierto, una vez cerrado. El progreso se borra. Para demostraciones, esta configuracion sirve. Sin embargo, si queres jugar varias veces. Esta opción deja de ser viable.
