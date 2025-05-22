@@ -27,6 +27,4 @@
     </asmv3:windowsSettings>
   </asmv3:application>
 
-</assembly>
-
-//Archivo XML que define: Compatibilidad con Windows 10/11. Nivel de ejecución (asInvoker). DPI Awareness. Hace referenciado en .csproj y es usado por Windows al ejecutar el .exe final. 
+</assembly> 
