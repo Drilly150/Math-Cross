@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/bin/Release/net9.0-windows/MathCrossWinForms.exe", // <--- CAMBIO AQUÍ
+      "program": "${workspaceFolder}/bin/Release/net9.0-windows/MathCrossWinForms.exe", // Asegúrate de que esta ruta sea correcta
       "args": [],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
