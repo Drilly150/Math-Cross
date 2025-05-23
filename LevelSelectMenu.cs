@@ -2,46 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using MathCross; // Necesario para acceder a GameStateManager, PuzzleGenerator, etc.
+using MathCross; // Necesario para acceder a GameStateManager, LevelProgressManager, etc.
+using System.Drawing.Drawing2D; // Necesario para SmoothingMode, etc.
 
 namespace MathCross
 {
     public class LevelSelectMenu : UserControl
     {
-        // Clase interna para representar un nivel en el mapa
+        // Esta es la ÚNICA y CORRECTA definición de la clase LevelNode.
+        // Asegúrate de que no haya otra definición en este archivo o en cualquier otro.
         private class LevelNode
         {
             public string Name;
             public PointF Position;
-            public float Offset; // Para animación del fondo
+            public float Offset;
             public bool Unlocked;
-            public RectangleF Bounds => new RectangleF(Position.X - 20, Position.Y - 20, 40, 40); // Área de clic
+            public RectangleF Bounds => new RectangleF(Position.X - 20, Position.Y - 20, 40, 40);
             public int Estrellas;
-            public int TiempoPromedio; // Puedes usar un TimeSpan aquí si necesitas más precisión
-            public int TiempoRecord;   // Puedes usar un TimeSpan aquí si necesitas más precisión
+            public int TiempoPromedio;
+            public int TiempoRecord;
             public bool AnimarCompletado = false;
         }
 
-        // Declaración de los Timers con el namespace completo para evitar ambigüedad (CS0104)
-        private System.Windows.Forms.Timer slideIn;
-        private System.Windows.Forms.Timer slideOut;
-        private System.Windows.Forms.Timer animationTimer; // Este ya estaba bien declarado
-
         private List<LevelNode> levels = new List<LevelNode>();
         private Panel infoPanel;
-        // private Timer slideIn, slideOut; // ELIMINAR ESTA LÍNEA DUPLICADA Y AMBIGUA
+        private System.Windows.Forms.Timer animationTimer; // Ya declarado correctamente
+        private System.Windows.Forms.Timer slideInTimer;   // Ya declarado correctamente
+        private System.Windows.Forms.Timer slideOutTimer;  // Ya declarado correctamente
+
         private int panelTargetX;
-        private LevelNode? currentLevelShown; // Hacerlo anulable para aceptar null
-        private const int panelWidth = 250;
-        private bool panelVisible = false;
-        // private System.Windows.Forms.Timer animationTimer; // Esta línea estaba duplicada
+        private LevelNode? currentLevelShown; // CAMBIO: Hacerlo anulable para aceptar null
+        private const int PanelWidth = 250; // Renombrado para mayor claridad PanelWidth en lugar de panelWidth
+        private bool panelVisible = false; // Se conserva para un uso potencial, aunque se puede inferir su estado.
+
         private float backgroundOffset = 0;
         private Random rand = new Random();
-        private LevelNode? selected = null; // CAMBIO: Hacerlo anulable (CS8625)
+        private LevelNode? selectedNode = null; // CAMBIO: Hacerlo anulable (CS8625)
 
         private Button closeButton;
-        private Button btnModoPractica; // Solo una declaración
-        private Button btnJugarNivel; // Asumo que este botón existe o se agregará
+        private Button btnModoPractica;
+        private Button btnJugarNivel; // Declaración de btnJugarNivel
 
         private string? nivelAResaltar; // CAMBIO: Declarar como anulable (CS8625)
 
@@ -54,7 +54,7 @@ namespace MathCross
             // Inicializar infoPanel (simplificado, debes tener una implementación completa)
             infoPanel = new Panel()
             {
-                Size = new Size(panelWidth, this.Height),
+                Size = new Size(PanelWidth, this.Height),
                 BackColor = Color.FromArgb(60, 60, 60),
                 Location = new Point(this.Width, 0), // Inicialmente fuera de pantalla
                 BorderStyle = BorderStyle.FixedSingle
@@ -67,7 +67,7 @@ namespace MathCross
                 Text = "X",
                 Font = new Font("Arial", 12, FontStyle.Bold),
                 Size = new Size(30, 30),
-                Location = new Point(panelWidth - 35, 5),
+                Location = new Point(PanelWidth - 35, 5),
                 BackColor = Color.DarkRed,
                 ForeColor = Color.White
             };
@@ -128,12 +128,12 @@ namespace MathCross
             this.Paint += OnPaint;
             this.MouseClick += OnMouseClick;
 
-            // Inicializar Timers de slide-in/out
-            slideIn = new System.Windows.Forms.Timer() { Interval = 10 };
-            slideIn.Tick += SlideInTick;
+            // Inicializar Timers de slide-in/out (ya están declarados arriba con el tipo correcto)
+            slideInTimer = new System.Windows.Forms.Timer() { Interval = 10 };
+            slideInTimer.Tick += SlideInTick;
 
-            slideOut = new System.Windows.Forms.Timer() { Interval = 10 };
-            slideOut.Tick += SlideOutTick;
+            slideOutTimer = new System.Windows.Forms.Timer() { Interval = 10 };
+            slideOutTimer.Tick += SlideOutTick;
 
             // Integración del MusicWidget
             MusicWidget musicWidget = new MusicWidget()
@@ -232,9 +232,9 @@ namespace MathCross
                 infoPanel.Controls.Add(lblTiempoRecord);
             }
 
-            panelTargetX = this.Width - panelWidth;
+            panelTargetX = this.Width - PanelWidth; // Usar PanelWidth
             panelVisible = true;
-            slideIn.Start();
+            slideInTimer.Start(); // Usar slideInTimer
             currentLevelShown = level; // Guardar el nivel que se está mostrando
         }
 
@@ -242,8 +242,8 @@ namespace MathCross
         {
             panelTargetX = this.Width;
             panelVisible = false;
-            slideOut.Start();
-            selected = null; // Deseleccionar cuando se oculta el panel
+            slideOutTimer.Start(); // Usar slideOutTimer
+            selectedNode = null; // Deseleccionar cuando se oculta el panel
             currentLevelShown = null; // Limpiar el nivel mostrado
             Invalidate(); // Redibujar para que se desmarque el nivel si estaba resaltado
         }
@@ -256,7 +256,7 @@ namespace MathCross
             }
             else
             {
-                slideIn.Stop();
+                slideInTimer.Stop();
                 infoPanel.Location = new Point(panelTargetX, infoPanel.Location.Y);
             }
         }
@@ -269,7 +269,7 @@ namespace MathCross
             }
             else
             {
-                slideOut.Stop();
+                slideOutTimer.Stop();
                 infoPanel.Location = new Point(panelTargetX, infoPanel.Location.Y);
             }
         }
@@ -314,7 +314,7 @@ namespace MathCross
                 foreach (var level in levels)
                 {
                     SolidBrush levelBrush;
-                    if (level == selected)
+                    if (level == selectedNode) // Usar selectedNode
                     {
                         levelBrush = new SolidBrush(Color.Gold); // Resaltar nivel seleccionado
                     }
@@ -369,26 +369,43 @@ namespace MathCross
             return Color.FromArgb(255, (int)(r * 255), (int)(g * 255), (int)(b * 255));
         }
 
-
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
+            bool clickedOnNode = false; // Bandera para saber si se hizo clic en un nodo
             foreach (var level in levels)
             {
-                if (level.Bounds.Contains(e.Location) && level.Unlocked)
+                if (level.Bounds.Contains(e.Location))
                 {
-                    if (selected == level)
+                    clickedOnNode = true;
+                    if (level.Unlocked)
                     {
-                        HideInfoPanel();
-                        selected = null;
+                        if (selectedNode == level) // Usar selectedNode
+                        {
+                            HideInfoPanel();
+                            selectedNode = null; // Usar selectedNode
+                        }
+                        else
+                        {
+                            selectedNode = level; // Usar selectedNode
+                            ShowInfoPanel(level);
+                        }
                     }
-                    else
+                    else // Hizo clic en un nodo bloqueado
                     {
-                        selected = level;
-                        ShowInfoPanel(level);
+                        // Opcionalmente, proporcione comentarios como un sonido de "bloqueo" o una pequeña animación.
+                        if (panelVisible) HideInfoPanel(); // Ocultar el panel si estaba mostrando otro nivel
+                        selectedNode = null; // Deseleccionar cualquier nodo seleccionado previamente
                     }
-                    Invalidate();
+                    Invalidate(); // Redibujar para mostrar los cambios de selección
                     break;
                 }
+            }
+
+            if (!clickedOnNode && panelVisible) // Se hizo clic fuera de cualquier nodo mientras el panel estaba visible
+            {
+                HideInfoPanel();
+                selectedNode = null;
+                Invalidate();
             }
         }
     }
