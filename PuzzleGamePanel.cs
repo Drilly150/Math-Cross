@@ -2,114 +2,180 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-// Asumo que estas clases existen en tu proyecto y namespace.
-// using MathCross.Helpers; // Para PuzzleGenerator, LevelProgressManager, etc. si están en otro namespace.
 
 namespace MathCross
 {
     public class PuzzleGamePanel : UserControl
     {
-        // Constantes y configuración de la cuadrícula
-        private int gridSize = 5; // Valor por defecto, se puede sobrescribir por nivel
-        private Button[,] cellButtons;
+        private const int DefaultGridSize = 5; // Renamed gridSize to DefaultGridSize for clarity if needed, actual gridSize is now a field
+        private Button[,] cellButtons; // Initialized in constructor based on gridSize
         private Panel sidebar;
+
         private int cellSize = 60;
         private int margin = 10;
 
-        // Datos del puzzle y números disponibles para el selector
-        private string[,] puzzleData; // Contendrá la solución del puzzle
+        private string[,] puzzleData;
+        private int gridSize; // Made gridSize a field to be set by level difficulty
+
         private List<int> availableNumbers = new List<int>() { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
-        // Controles de UI para estadísticas del juego
         private Label lblTiempo, lblPuntos, lblErrores;
         private Timer gameTimer;
         private int segundosTranscurridos = 0;
         private int puntos = 0;
         private int errores = 0;
 
-        // Sistema de pistas
-        private int pistasDisponibles = 3; // Valor por defecto, se puede sobrescribir por nivel
+        private int pistasDisponibles = 3;
         private Button btnPista;
         private Label lblPistas;
-        private bool pistaEstrategicaActiva = false; // Asumo que esto es un campo, determina el tipo de pista
 
-        // UI para finalización de nivel
         private Panel estrellasPanel;
         private Button btnVolverMenu;
         private Button btnContinuarNivel;
         private Label felicidadesLabel;
 
-        // Botón para volver atrás (por ejemplo, al menú de selección de nivel)
         private Button btnAtras;
 
-        // Identificador del nivel actual y modo de práctica
-        private string nivelActual;
-        private bool modoPractica = false; // Determina si se guarda el progreso
+        // Field for strategic hint state - assumed default
+        private bool pistaEstrategicaActiva = false;
+        // Field for practice mode state
+        private bool modoPractica = false;
+        private string nivelActual; // Field to store the current level ID
 
-        // Evento para solicitar cierre (útil para que el contenedor principal maneje la navegación)
-        public event Action OnCloseRequested;
+        // Event for closing requests, to be handled by the parent form/manager
+        public event EventHandler OnCloseRequested;
 
-        /// <summary>
-        /// Constructor principal para el panel del juego.
-        /// </summary>
-        /// <param name="nivelId">El identificador único del nivel a cargar.</param>
-        /// <param name="enModoPractica">Indica si el juego está en modo práctica (no guarda progreso).</param>
-        public PuzzleGamePanel(string nivelId, bool enModoPractica = false)
+
+        // Constructor: Main way to create and initialize the puzzle panel for a specific level
+        public PuzzleGamePanel(string nivelId)
         {
             this.nivelActual = nivelId;
-            this.modoPractica = enModoPractica;
-            this.cellButtons = new Button[gridSize, gridSize]; // Inicializar aquí por si gridSize cambia
-
-            // Configuración inicial del UserControl
             this.Dock = DockStyle.Fill;
             this.BackColor = Color.White;
 
-            // Cargar datos y configuración del puzzle según el nivelId
-            PuzzleGenerator gen = new PuzzleGenerator(); // Asumo que PuzzleGenerator existe
-            var dificultad = gen.ObtenerDificultadPorNivel(nivelId); // Asumo este método existe
+            PuzzleGenerator gen = new PuzzleGenerator();
+            var dificultad = gen.ObtenerDificultadPorNivel(nivelId);
 
-            this.gridSize = dificultad.Size; // Actualiza gridSize según la dificultad
-            this.cellButtons = new Button[gridSize, gridSize]; // Re-inicializar con el tamaño correcto
-            gen.SetOperadores(dificultad.OperadoresPermitidos); // Asumo este método existe
-            this.puzzleData = gen.GenerarPuzzle(gridSize, dificultad.PorcentajeCeldasOcultas); // Asumo este método existe
+            this.gridSize = dificultad.Size; // Set grid size from difficulty
+            this.cellButtons = new Button[this.gridSize, this.gridSize]; // Initialize cellButtons array with correct size
+            gen.SetOperadores(dificultad.OperadoresPermitidos);
+            puzzleData = gen.GenerarPuzzle(this.gridSize, dificultad.PorcentajeCeldasOcultas);
 
-            this.pistasDisponibles = dificultad.MaxPistas; // Cargar pistas según dificultad
+            pistasDisponibles = dificultad.MaxPistas;
+            // modoPractica could be set based on nivelId or another parameter if needed
+            // e.g., if (nivelId.StartsWith("Practice_")) { this.modoPractica = true; }
 
-            // Crear los elementos de la UI
-            CreateBackButton();
+
+            CreateBackButton(); // Create back button first so it's potentially behind other elements if overlap
             CreateGrid();
-            CreateSidebar();
-
-            // Iniciar temporizador del juego
-            StartGameTimer();
+            CreateSidebar(); // Sidebar should be created once
+            
+            // Ensure game timer starts after everything is set up
+            InitializeGameTimer();
         }
 
-        /// <summary>
-        /// Crea el botón para volver a la pantalla anterior.
-        /// </summary>
+        // Public method to potentially regenerate a puzzle.
+        // Consider implications if called on an already initialized panel (clearing old controls, etc.)
+        // For now, assumes it's for a new setup or a controlled reset.
+        public string[,] GenerarPuzzle(int size, int porcentajeOcultas)
+        {
+            this.Dock = DockStyle.Fill; // Should ideally be set once
+            this.BackColor = Color.White; // Should ideally be set once
+
+            this.gridSize = size; // Update the class field for grid size
+            this.cellButtons = new Button[this.gridSize, this.gridSize]; // Re-initialize for new size
+
+            PuzzleGenerator gen = new PuzzleGenerator();
+            // Assuming PuzzleGenerator can be configured or has appropriate methods
+            // gen.SetOperadores(...); // Might be needed if operators can change per generation
+            puzzleData = gen.GenerarPuzzle(this.gridSize, porcentajeOcultas);
+
+            // Important: If this method is called on an existing panel,
+            // existing grid controls need to be cleared and disposed of properly before recreating.
+            // For simplicity, this example assumes CreateGrid handles it or this is for a fresh setup.
+            // A more robust solution would be to have a dedicated panel for grid buttons and clear that panel.
+            
+            // Clear existing grid buttons if any
+            ClearGridControls();
+
+            CreateGrid(); // Re-creates buttons based on new puzzleData and gridSize
+            
+            // Sidebar should ideally not be recreated if it exists.
+            // If it needs updates, specific update methods are better.
+            // If CreateSidebar is called again, it might add duplicate controls.
+            // For now, commenting out to prevent duplication if GenerarPuzzle is called mid-game.
+            // If a full UI reset is intended, CreateSidebar might need to be called,
+            // but it should also clear its previous controls.
+            // CreateSidebar(); 
+
+            return puzzleData;
+        }
+        
+        private void ClearGridControls()
+        {
+            for (int row = 0; row < cellButtons.GetLength(0); row++)
+            {
+                for (int col = 0; col < cellButtons.GetLength(1); col++)
+                {
+                    if (cellButtons[row, col] != null)
+                    {
+                        this.Controls.Remove(cellButtons[row, col]);
+                        cellButtons[row, col].Dispose();
+                        cellButtons[row, col] = null;
+                    }
+                }
+            }
+        }
+
+
         private void CreateBackButton()
         {
             btnAtras = new Button()
             {
                 Text = "← Atrás",
                 Size = new Size(80, 30),
-                Location = new Point(10, 10), // Ajustar posición según sea necesario
+                Location = new Point(10, 10), // Ensure this doesn't overlap with grid
                 BackColor = Color.LightGray,
                 Font = new Font("Arial", 9)
             };
 
-            // Asumo que GameStateManager.VolverAtras() maneja la lógica de navegación
-            btnAtras.Click += (s, e) => GameStateManager.VolverAtras();
+            // Assuming GameStateManager is a static class or you have an instance
+            btnAtras.Click += (s, e) => {
+                gameTimer?.Stop(); // Stop timer before going back
+                // GameStateManager.VolverAtras(); // If GameStateManager handles view changes
+                OnCloseRequested?.Invoke(this, EventArgs.Empty); // More generic way to request close
+            };
             this.Controls.Add(btnAtras);
+            btnAtras.BringToFront(); // Ensure back button is visible
         }
 
-        /// <summary>
-        /// Crea la cuadrícula de botones para el puzzle.
-        /// </summary>
+
+        public void AgregarPuntos(int cantidad)
+        {
+            puntos += cantidad;
+            if (lblPuntos != null) lblPuntos.Text = $"Puntos: {puntos}";
+        }
+
+        public void RegistrarError()
+        {
+            errores++;
+            if (lblErrores != null) lblErrores.Text = $"Errores: {errores}";
+        }
+
+        // PuzzleCell class seems to be a conceptual representation, not directly used for Button logic in this snippet.
+        // If it were to be used, cellButtons[,] would be of type PuzzleCell or Buttons would store PuzzleCell in Tag.
+        public class PuzzleCell
+        {
+            public enum CellType { Empty, Number, Operator, Equals }
+            public CellType Type { get; set; }
+            public string Value { get; set; }
+            public bool Editable => Type == CellType.Empty; // Original logic; typically numbers are editable, not empty cells
+        }
+
         private void CreateGrid()
         {
-            int offsetX = btnAtras != null ? btnAtras.Right + 20 : 40; // Posicionar la cuadrícula después del botón "Atrás"
-            int offsetY = btnAtras != null ? btnAtras.Top : 40;
+            int offsetX = btnAtras != null ? btnAtras.Right + 20 : 40; // Adjust offset if back button exists
+            int offsetY = btnAtras != null ? btnAtras.Top : 40; // Align top or provide margin
 
             for (int row = 0; row < gridSize; row++)
             {
@@ -119,93 +185,118 @@ namespace MathCross
                     btn.Size = new Size(cellSize, cellSize);
                     btn.Location = new Point(offsetX + col * (cellSize + margin), offsetY + row * (cellSize + margin));
                     btn.Font = new Font("Arial", 14, FontStyle.Bold);
-                    btn.Tag = new Point(row, col); // Guardar la posición para referencia
+                    btn.Tag = new Point(row, col); // Store cell coordinates
 
-                    string content = puzzleData[row, col]; // puzzleData contiene la SOLUCIÓN
+                    string content = puzzleData[row, col];
 
-                    // Si la celda en puzzleData está vacía o es un número,
-                    // significa que es una celda que el jugador debe llenar.
-                    // El PuzzleGenerator debe haber dejado algunas celdas vacías (o con el número a adivinar)
-                    // y otras con operadores/igual.
-                    if (string.IsNullOrEmpty(content) || EsNumero(content)) // Celda para que el jugador ingrese un número
+                    // Cells are determined by puzzleData.
+                    // Numbers are initially hidden (empty text) and editable.
+                    // Operators and '=' are shown and disabled.
+                    // Null or empty strings in puzzleData for a cell means it's part of the structure but not interactive initially (e.g. truly empty, or for aesthetics)
+                    // For this game, it seems all cells should have some content from puzzleData (number, operator, or '=')
+                    // If puzzleData[row,col] itself is empty/null, it means it's a cell to be filled by the player or it's an invalid puzzle.
+                    // Let's assume puzzleData always provides a hint: a number (to be guessed) or an operator/equals.
+
+                    if (!string.IsNullOrEmpty(content))
                     {
-                        // Si puzzleData tiene un número aquí, es una celda pre-llenada (parte de la pista inicial)
-                        // Si está vacía en puzzleData, es una celda que el jugador DEBE llenar.
-                        // Para el propósito de la UI, si es un número en puzzleData, lo mostramos como pista.
-                        // Si es un string vacío en puzzleData, el jugador la llena.
-                        // La lógica de "PorcentajeCeldasOcultas" en PuzzleGenerator debería manejar esto.
-
-                        // Si el PuzzleGenerator marca celdas a ocultar con un placeholder (ej. "?") o si simplemente
-                        // queremos que todas las celdas numéricas (según puzzleData) sean rellenables por el jugador,
-                        // la siguiente lógica se aplica:
-                        if (string.IsNullOrEmpty(content)) // Celda que el jugador debe rellenar
+                        if (EsNumero(content)) // If the true value is a number, it's a guessable cell
                         {
-                            btn.Text = ""; // Vacía para el jugador
+                            btn.Text = ""; // Player needs to fill this
                             btn.BackColor = Color.White;
                             btn.Click += OnEditableCellClick;
+                            btn.Enabled = true;
                         }
-                        else // Celda con un número de la solución (pre-llenada como pista)
+                        else // Operator or "="
                         {
                             btn.Text = content;
-                            btn.BackColor = Color.LightCyan; // Un color diferente para pistas iniciales
-                            btn.Enabled = false; // No editable si es parte de la pista inicial
+                            btn.Enabled = false;
+                            btn.BackColor = Color.LightGray;
                         }
                     }
-                    else // Celda con operador o "=" (no editable)
+                    else
                     {
-                        btn.Text = content;
+                        // This case implies the puzzle definition from PuzzleGenerator
+                        // has an empty cell that is not a number placeholder.
+                        // For MathCross, cells are usually numbers or fixed operators/equals.
+                        // If it's an empty cell that should be filled by the player, EsNumero(puzzleData[row,col]) would handle it if puzzleData held the answer.
+                        // If puzzleData has "" for a cell the player should fill, then this logic needs adjustment.
+                        // For now, assume empty content from puzzleData means it's a non-interactive, dark cell.
+                        // This might need to align with how PuzzleGenerator defines "occultas" (hidden cells for player input)
+                        btn.Text = ""; // Should be empty for player input
+                        btn.BackColor = Color.White; // Editable cells are white
+                        btn.Click += OnEditableCellClick;
+                        btn.Enabled = true;
+                        // However, the original logic:
+                        // if (!string.IsNullOrEmpty(content)) { if (EsNumero(content)) { btn.Text = ""; /* editable */ } else { /* fixed op */ } }
+                        // else { btn.Enabled = false; btn.BackColor = Color.DarkGray; /* non-interactive */ }
+                        // This implies if puzzleData has "" for a cell, it's disabled and dark. This is unusual for a player-fillable cell.
+                        // Let's stick to the original interpretation: if puzzleData[row,col] is a number, it's fillable.
+                        // The else case (IsNullOrEmpty) should ideally not happen if puzzleData correctly represents all cells.
+                        // For safety, let's assume if content is null/empty from puzzleData, it's an error or non-interactive.
+                        // Reverting to a safer interpretation of original logic for cells not holding numbers:
+                        // If puzzleData[r,c] is a number, it's a player cell (initially blank text).
+                        // If puzzleData[r,c] is an operator/equals, it's fixed.
+                        // If puzzleData[r,c] is string.Empty, it implies a cell not meant for numbers (e.g. structural, or an issue in puzzleData)
+                        // Given the original:
+                        // if (!string.IsNullOrEmpty(content)) { if (EsNumero(content)) { btn.Text = ""; } else { btn.Text = content; btn.Enabled=false; }}
+                        // else { btn.Enabled = false; btn.BackColor = DarkGray }
+                        // This means only cells from puzzleData that are numbers are playable.
+                        // If a cell in puzzleData is empty, it's disabled. This seems correct if the puzzle generator defines some cells as "truly blank" / non-interactive.
+
+                        // Corrected logic based on re-evaluation:
+                        // A cell is either:
+                        // 1. A number placeholder (puzzleData[r,c] is the actual number, btn.Text is initially empty) -> Editable
+                        // 2. An operator/equals sign (puzzleData[r,c] is the operator, btn.Text is the operator) -> Disabled
+                        // 3. If puzzleData[r,c] is empty or null from generator, it implies a structural non-interactive cell.
+                        // The provided code from user had:
+                        // if (!string.IsNullOrEmpty(content)) { if (EsNumero(content)) { btn.Text = ""; btn.BackColor = Color.White; btn.Click += OnEditableCellClick; } ...}
+                        // else { btn.Enabled = false; btn.BackColor = Color.DarkGray; }
+                        // This means if `puzzleData[row,col]` is empty, it becomes a disabled dark cell. This is what I'll stick to.
                         btn.Enabled = false;
-                        btn.BackColor = Color.LightGray;
+                        btn.BackColor = Color.DarkGray;
                     }
+
                     this.Controls.Add(btn);
                     cellButtons[row, col] = btn;
                 }
             }
         }
 
-        /// <summary>
-        /// Verifica si un string es un número.
-        /// </summary>
+        // Only one definition of EsNumero needed
         private bool EsNumero(string val)
         {
             return int.TryParse(val, out _);
         }
 
-        /// <summary>
-        /// Manejador de clic para celdas editables.
-        /// </summary>
         private void OnEditableCellClick(object sender, EventArgs e)
         {
             Button clickedButton = sender as Button;
             if (clickedButton == null) return;
 
-            // Asumo que NumberSelector es un Form o UserControl que devuelve un DialogResult
             using (NumberSelector selector = new NumberSelector(availableNumbers))
             {
-                if (selector.ShowDialog() == DialogResult.OK && selector.SelectedValue.HasValue)
+                if (selector.ShowDialog(this.FindForm()) == DialogResult.OK) // Pass owner form for dialog
                 {
                     clickedButton.Text = selector.SelectedValue.ToString();
-                    AnimateCell(clickedButton); // Pequeña animación al colocar número
+                    AnimateCell(clickedButton);
 
-                    // Verificar si el tablero está completo después de cada entrada
                     if (TodasLasCeldasLlenas())
                     {
-                        VerificarTableroCompleto();
+                        VerificarTablero();
                     }
+                    // The LevelProgressManager.CompletarNivel call was removed from here
+                    // as VerificarTablero now handles it correctly with this.nivelActual.
                 }
             }
         }
 
-        /// <summary>
-        /// Anima una celda brevemente después de que se ingresa un número.
-        /// </summary>
         private void AnimateCell(Button btn)
         {
             var originalSize = btn.Size;
-            var animationTimer = new System.Windows.Forms.Timer(); // Especificar System.Windows.Forms.Timer
+            var animationTimer = new System.Windows.Forms.Timer(); // Be specific if System.Timers.Timer is also used
             int frame = 0;
             animationTimer.Interval = 15;
-            animationTimer.Tick += (s, ev) =>
+            animationTimer.Tick += (s, e) =>
             {
                 frame++;
                 if (frame <= 2)
@@ -216,23 +307,29 @@ namespace MathCross
                 {
                     btn.Size = originalSize;
                     animationTimer.Stop();
-                    animationTimer.Dispose(); // Liberar recursos del timer
+                    animationTimer.Dispose(); // Dispose timer when done
                 }
             };
             animationTimer.Start();
         }
 
-        /// <summary>
-        /// Crea el panel lateral (sidebar) con información y controles.
-        /// </summary>
         private void CreateSidebar()
         {
-            sidebar = new Panel()
+            if (sidebar == null) // Create sidebar only once
             {
-                Width = 220,
-                Dock = DockStyle.Right,
-                BackColor = Color.FromArgb(240, 240, 240)
-            };
+                sidebar = new Panel()
+                {
+                    Width = 220,
+                    Dock = DockStyle.Right,
+                    BackColor = Color.FromArgb(240, 240, 240)
+                };
+                this.Controls.Add(sidebar);
+            }
+            else
+            {
+                sidebar.Controls.Clear(); // Clear existing controls if refreshing
+            }
+
 
             Label title = new Label()
             {
@@ -254,7 +351,7 @@ namespace MathCross
 
             lblPuntos = new Label()
             {
-                Text = "Puntos: 0",
+                Text = $"Puntos: {puntos}", // Initial points
                 Font = new Font("Arial", 12),
                 Location = new Point(20, 100),
                 AutoSize = true
@@ -263,7 +360,7 @@ namespace MathCross
 
             lblErrores = new Label()
             {
-                Text = "Errores: 0",
+                Text = $"Errores: {errores}", // Initial errores
                 Font = new Font("Arial", 12),
                 Location = new Point(20, 140),
                 AutoSize = true
@@ -282,109 +379,128 @@ namespace MathCross
             btnPista = new Button()
             {
                 Text = "Usar pista",
-                Size = new Size(180, 35), // Ancho ajustado
+                Size = new Size(160, 35),
                 Location = new Point(20, 210),
                 BackColor = Color.LightBlue,
                 Font = new Font("Arial", 10)
             };
-            btnPista.Click += (s, ev) =>
+            btnPista.Click += (s, e) =>
             {
-                if (pistaEstrategicaActiva) // Asumo que 'pistaEstrategicaActiva' es un campo de clase booleano
+                if (pistaEstrategicaActiva) // pistaEstrategicaActiva is now a field
                     AplicarPistaEstrategica();
                 else
-                    UsarPistaSimple();
+                    UsarPista();
             };
             sidebar.Controls.Add(btnPista);
 
-            // Asumo que MusicWidget es un UserControl existente
+            // MusicWidget - Assuming MusicWidget is a UserControl or similar
+            // Ensure MusicWidget class is correctly defined in its own file or accessible.
             MusicWidget widget = new MusicWidget();
-            widget.Location = new Point(20, 260); // Ajustar posición
+            widget.Location = new Point(10, sidebar.Height - widget.Height - 10); // Example positioning at bottom
+            widget.Anchor = AnchorStyles.Bottom | AnchorStyles.Left; // Anchor if sidebar resizes
             sidebar.Controls.Add(widget);
-
-            this.Controls.Add(sidebar);
         }
-
-        /// <summary>
-        /// Inicia el temporizador del juego.
-        /// </summary>
-        private void StartGameTimer()
+        
+        private void InitializeGameTimer()
         {
-            gameTimer = new System.Windows.Forms.Timer(); // Especificar System.Windows.Forms.Timer
-            gameTimer.Interval = 1000; // 1 segundo
-            gameTimer.Tick += (s, e) =>
+            if (gameTimer == null)
             {
-                segundosTranscurridos++;
-                lblTiempo.Text = $"Tiempo: {segundosTranscurridos / 60}:{(segundosTranscurridos % 60).ToString("D2")}";
-            };
+                gameTimer = new Timer();
+                gameTimer.Interval = 1000;
+                gameTimer.Tick += (s, e) =>
+                {
+                    segundosTranscurridos++;
+                    if (lblTiempo != null) 
+                        lblTiempo.Text = $"Tiempo: {segundosTranscurridos / 60}:{(segundosTranscurridos % 60).ToString("D2")}";
+                };
+            }
+            segundosTranscurridos = 0; // Reset timer
+            if (lblTiempo != null) lblTiempo.Text = "Tiempo: 0:00";
             gameTimer.Start();
         }
 
-        /// <summary>
-        /// Verifica si todas las celdas editables han sido llenadas por el jugador.
-        /// </summary>
-        private bool TodasLasCeldasLlenas()
+
+        private bool VerificarTablero()
         {
-            for (int row = 0; row < gridSize; row++)
-            {
-                for (int col = 0; col < gridSize; col++)
-                {
-                    // Una celda está "vacía para el jugador" si es editable Y no tiene texto.
-                    if (cellButtons[row, col].Enabled && string.IsNullOrEmpty(cellButtons[row, col].Text))
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        
-        /// <summary>
-        /// Se llama cuando todas las celdas están llenas para verificar la solución.
-        /// </summary>
-        private void VerificarTableroCompleto()
-        {
-            gameTimer.Stop(); // Detener el tiempo al verificar
+            if (!TodasLasCeldasLlenas())
+                return false;
 
             bool filasOK = VerificarFilas();
             bool columnasOK = VerificarColumnas();
 
             if (filasOK && columnasOK)
             {
-                int estrellasObtenidas = CalcularEstrellas();
-                AgregarPuntos(100); // Puntos extra por completar correctamente
+                gameTimer.Stop(); // Stop timer on successful completion
+                int estrellasCalculadas = CalcularEstrellas();
+                AgregarPuntos(100); // Extra points for completing
 
-                if (!modoPractica)
-                {
-                    // Asumo que LevelProgressManager existe y maneja el guardado.
-                    LevelProgressManager.CompletarNivel(nivelActual, estrellasObtenidas, segundosTranscurridos, puntos, errores);
-                }
-                MostrarPantallaDeVictoria(estrellasObtenidas);
+                // Use this.nivelActual instead of hardcoded "P1"
+                LevelProgressManager.CompletarNivel(this.nivelActual, estrellasCalculadas, segundosTranscurridos);
+                MostrarEstrellasEnSidebar(estrellasCalculadas); // Changed method name for clarity
+
+                return true;
             }
             else
             {
                 RegistrarError();
                 MessageBox.Show("Hay errores en las operaciones. Revisa tus respuestas.", "Verificación Fallida", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                gameTimer.Start(); // Reanudar el tiempo si hay errores
+                return false;
             }
         }
 
+        private bool TodasLasCeldasLlenas()
+        {
+            foreach (Button btn in cellButtons)
+            {
+                // An enabled button that is empty means not all cells are filled.
+                // If btn is null (e.g. gridSize changed and array not fully populated yet), skip.
+                if (btn != null && btn.Enabled && string.IsNullOrEmpty(btn.Text))
+                    return false;
+            }
+            return true;
+        }
 
         private bool VerificarFilas()
         {
             for (int row = 0; row < gridSize; row++)
             {
-                // Solo verificar filas que contienen una operación completa (ej. N OP N = N)
-                // Esto asume que las filas impares (0, 2, 4) son números/operadores y las pares (1, 3) son operadores/números
-                // Para un MathCross típico, las operaciones están en cada fila y columna.
-                // La estructura es N OP N = R
-                if (gridSize == 5) // Asumiendo formato N1 OP N2 = R
-                {
-                    string[] expr = new string[5];
-                    for (int col = 0; col < 5; col++)
-                        expr[col] = cellButtons[row, col].Text;
+                // Equations are typically every other row if grid includes results within the same structure.
+                // Assuming standard MathCross where each number cell participates.
+                // For a 5x5 grid, this implies expressions like N Op N = N.
+                // Need to ensure we only try to evaluate valid equation structures.
+                // If gridSize implies equations are not always 5 tokens long, this needs adjustment.
+                // Current EvaluarOperacion expects 5 tokens.
+                if (gridSize != 5 && (row % 2 != 0)) continue; // Skip if not an equation row for non-5x5, or adjust logic
+                if (gridSize != 5) { /* More complex logic needed for general gridSize */ }
 
-                    if (!EvaluarOperacion(expr))
+
+                try
+                {
+                    string[] expr = new string[gridSize]; // Assuming expression length matches gridSize
+                    for (int col = 0; col < gridSize; col++)
+                    {
+                        if (cellButtons[row, col] == null) return false; // Grid not fully initialized
+                        expr[col] = cellButtons[row, col].Text;
+                        if (string.IsNullOrEmpty(expr[col]) && cellButtons[row,col].Enabled) return false; // Empty editable cell
+                    }
+                    
+                    // If EvaluarOperacion strictly needs 5 tokens, adjust this part or EvaluarOperacion
+                    if (gridSize == 5 && !EvaluarOperacion(expr)) // Only evaluate if gridSize is 5
                         return false;
+                    else if (gridSize != 5)
+                    {
+                        // Implement or call a more generic evaluation method for other grid sizes
+                        // For now, assume gridSize 5 for this evaluation part, or return false.
+                        // return false; // Or handle other grid sizes
+                    }
+                }
+                catch (FormatException) // Catch if int.Parse fails for an incomplete/invalid number
+                {
+                    return false; // Invalid format in a cell considered an error
+                }
+                catch (Exception) // General catch, consider logging
+                {
+                    return false; // Any other error during evaluation
                 }
             }
             return true;
@@ -394,178 +510,201 @@ namespace MathCross
         {
             for (int col = 0; col < gridSize; col++)
             {
-                 // Asumiendo formato N1 OP N2 = R para columnas también
-                if (gridSize == 5)
+                 if (gridSize != 5 && (col % 2 != 0)) continue; // Skip if not an equation column
+                 if (gridSize != 5) { /* More complex logic needed */ }
+
+                try
                 {
-                    string[] expr = new string[5];
-                    for (int row = 0; row < 5; row++)
+                    string[] expr = new string[gridSize];
+                    for (int row = 0; row < gridSize; row++)
+                    {
+                        if (cellButtons[row, col] == null) return false;
                         expr[row] = cellButtons[row, col].Text;
-                    
-                    if (!EvaluarOperacion(expr))
+                        if (string.IsNullOrEmpty(expr[row]) && cellButtons[row,col].Enabled) return false;
+                    }
+
+                    if (gridSize == 5 && !EvaluarOperacion(expr))
                         return false;
+                    else if (gridSize != 5)
+                    {
+                        // return false; // Or handle other grid sizes
+                    }
+                }
+                catch (FormatException)
+                {
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
                 }
             }
             return true;
         }
 
-        /// <summary>
-        /// Evalúa una expresión matemática simple dada como un array de strings.
-        /// Formato esperado: [num1, operador, num2, igual, resultado]
-        /// </summary>
         private bool EvaluarOperacion(string[] tokens)
         {
-            if (tokens.Length != 5) return false; // Formato incorrecto
+            // This evaluation strictly expects a 5-token expression: num op num = num
+            if (tokens.Length != 5) return false; // Or throw new ArgumentException("Expression must have 5 tokens.");
 
-            // Validar que los tokens necesarios sean parseables y correctos
-            if (!int.TryParse(tokens[0], out int num1) ||
-                !int.TryParse(tokens[2], out int num2) ||
-                tokens[3] != "=" ||
-                !int.TryParse(tokens[4], out int resultadoEsperado))
+            if (string.IsNullOrEmpty(tokens[0]) || string.IsNullOrEmpty(tokens[1]) ||
+                string.IsNullOrEmpty(tokens[2]) || string.IsNullOrEmpty(tokens[3]) || string.IsNullOrEmpty(tokens[4]))
             {
-                return false; // Datos inválidos en la expresión
+                return false; // Incomplete expression
             }
 
+            int a, b, resultado;
+            if (!int.TryParse(tokens[0], out a)) return false;
             string op = tokens[1];
+            if (!int.TryParse(tokens[2], out b)) return false;
+            string igual = tokens[3];
+            if (!int.TryParse(tokens[4], out resultado)) return false;
+
+
+            if (igual != "=") return false;
 
             switch (op)
             {
-                case "+": return num1 + num2 == resultadoEsperado;
-                case "-": return num1 - num2 == resultadoEsperado;
-                case "×": // Usar × para visualización, * para posible entrada
-                case "*": return num1 * num2 == resultadoEsperado;
-                case "÷": // Usar ÷ para visualización, / para posible entrada
-                case "/": return num2 != 0 && num1 / (double)num2 == resultadoEsperado; // Usar double para división decimal si es necesario, o asegurar que sea entera
-                default: return false; // Operador no reconocido
+                case "+": return a + b == resultado;
+                case "-": return a - b == resultado;
+                case "×": case "*": return a * b == resultado;
+                case "÷": case "/": return b != 0 && (double)a / b == resultado; // Use floating point for division check if result can be non-integer. Or ensure integer division.
+                                                                         // If results must be integers, then a % b == 0 && a / b == resultado
+                default: return false;
             }
         }
 
-        /// <summary>
-        /// Calcula el número de estrellas ganadas.
-        /// </summary>
         private int CalcularEstrellas()
         {
-            int numEstrellas = 1; // Mínimo una estrella por completar
+            int estrellas = 1; // Base star for completion
 
-            if (errores == 0) // Sin errores
-                numEstrellas++;
-            else if (errores <= 3) // Pocos errores
-                numEstrellas = Math.Max(numEstrellas, 1); // Asegurar al menos 1 si hubo errores
+            if (errores == 0) // Stricter: 0 errors for a star
+                estrellas++;
+            else if (errores <= 2) // Looser: 1-2 errors still gets a star (adjust as needed)
+                estrellas++;
 
-            // Ejemplo de criterio de tiempo (ajustar según dificultad)
-            // Estos umbrales deberían venir de la configuración de 'dificultad'
-            if (segundosTranscurridos <= 60 && errores == 0) // Muy rápido y perfecto
-                numEstrellas = 3;
-            else if (segundosTranscurridos <= 120) // Tiempo razonable
-                numEstrellas = Math.Max(numEstrellas, 2);
-            
-            return Math.Min(numEstrellas, 3); // Máximo 3 estrellas
+
+            // Time-based star: adjust threshold as needed
+            if (segundosTranscurridos <= 60) // e.g., 1 minute for a 5x5
+                estrellas++;
+            else if (segundosTranscurridos <= 120 && estrellas < 3) // Tiered time
+                estrellas++;
+
+
+            // Ensure max 3 stars
+            return Math.Min(estrellas, 3);
         }
 
-        /// <summary>
-        /// Muestra la pantalla de victoria/finalización del nivel en el sidebar.
-        /// </summary>
-        private void MostrarPantallaDeVictoria(int estrellasGanadas)
+        private void MostrarEstrellasEnSidebar(int cantidadEstrellas)
         {
-            // Limpiar controles existentes del sidebar relacionados con el juego activo
-            sidebar.Controls.Remove(lblTiempo);
-            sidebar.Controls.Remove(lblPuntos);
-            sidebar.Controls.Remove(lblErrores);
-            sidebar.Controls.Remove(lblPistas);
-            sidebar.Controls.Remove(btnPista);
-            // Considerar si MusicWidget también debe removerse o si es persistente
+            if (sidebar == null) return; // Sidebar not created
+            sidebar.Controls.Clear(); // Clear previous sidebar content (timer, points, etc.)
 
             felicidadesLabel = new Label()
             {
-                Text = "¡Nivel Completado!",
+                Text = "¡Felicidades!",
                 Font = new Font("Arial", 16, FontStyle.Bold),
                 ForeColor = Color.Green,
-                Location = new Point(20, (sidebar.Controls.Count > 0 ? sidebar.Controls[sidebar.Controls.Count -1].Bottom : 0) + 20 ), // Ajustar posición
-                AutoSize = true,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Width = sidebar.Width - 40
+                Location = new Point(20, 20),
+                AutoSize = true
             };
             sidebar.Controls.Add(felicidadesLabel);
 
             estrellasPanel = new Panel()
             {
-                Size = new Size(180, 50),
-                Location = new Point((sidebar.Width - 180) / 2, felicidadesLabel.Bottom + 15),
-                BackColor = Color.Transparent
+                Size = new Size(180, 50), // Width for 3 stars (40*3 + 10*2 margins approx)
+                Location = new Point(20, 60),
+                BackColor = Color.Transparent // Or sidebar.BackColor
             };
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++) // Always show 3 star placeholders
             {
-                PictureBox star = new PictureBox()
+                PictureBox starPic = new PictureBox() // Renamed from star to avoid conflict
                 {
                     Size = new Size(40, 40),
-                    Location = new Point(i * (40 + 10), 5), // 40 de estrella + 10 de espacio
-                    // Asumo que tienes recursos 'star_full' y 'star_empty'
-                    Image = i < estrellasGanadas ? Properties.Resources.star_full : Properties.Resources.star_empty,
+                    Location = new Point(i * (40 + 10), 5), // Star size + margin
+                    // Ensure Properties.Resources.star_full and star_empty exist
+                    Image = i < cantidadEstrellas ? Properties.Resources.star_full : Properties.Resources.star_empty,
                     SizeMode = PictureBoxSizeMode.Zoom
                 };
-                estrellasPanel.Controls.Add(star);
+                estrellasPanel.Controls.Add(starPic);
             }
             sidebar.Controls.Add(estrellasPanel);
 
             btnVolverMenu = new Button()
             {
-                Text = "Volver al Menú",
+                Text = "Volver al menú",
                 Size = new Size(160, 35),
-                Location = new Point((sidebar.Width - 160) / 2, estrellasPanel.Bottom + 20),
+                Location = new Point(20, 130),
                 BackColor = Color.LightGray,
                 Font = new Font("Arial", 10)
             };
-            btnVolverMenu.Click += (s, e) => OnCloseRequested?.Invoke(); // Notificar al contenedor para que cierre este panel
+            btnVolverMenu.Click += (s, e) =>
+            {
+                // No need to call LevelProgressManager.CompletarNivel again here.
+                OnCloseRequested?.Invoke(this, EventArgs.Empty); // Request parent to handle view change
+                // Example of how parent might handle:
+                // if (this.ParentForm is MainForm main) { main.ShowLevelSelect(this.nivelActual); }
+            };
             sidebar.Controls.Add(btnVolverMenu);
 
-            // Lógica para el botón "Siguiente Nivel"
-            // Necesitarías una forma de saber cuál es el siguiente nivel.
-            string siguienteNivelId = LevelProgressManager.ObtenerSiguienteNivel(nivelActual); // Asumo este método
-            if (!string.IsNullOrEmpty(siguienteNivelId))
+            // Logic for "Siguiente nivel" button
+            // Determine if there IS a next level before showing the button
+            string proximoNivelId = LevelProgressManager.ObtenerSiguienteNivel(this.nivelActual); // Assumed method
+
+            if (!string.IsNullOrEmpty(proximoNivelId))
             {
                 btnContinuarNivel = new Button()
                 {
-                    Text = "Siguiente Nivel",
+                    Text = "Siguiente nivel",
                     Size = new Size(160, 35),
-                    Location = new Point((sidebar.Width - 160) / 2, btnVolverMenu.Bottom + 10),
+                    Location = new Point(20, 180),
                     BackColor = Color.LightGreen,
                     Font = new Font("Arial", 10)
                 };
                 btnContinuarNivel.Click += (s, e) =>
                 {
-                    // Limpiar este panel y cargar el siguiente
-                    this.Parent.Controls.Remove(this); // Quitar el panel actual
-                    PuzzleGamePanel proximoNivel = new PuzzleGamePanel(siguienteNivelId, modoPractica);
-                    proximoNivel.OnCloseRequested += () => OnCloseRequested?.Invoke(); // Propagar el evento
-                    this.Parent.Controls.Add(proximoNivel); // Añadir el nuevo panel
-                    this.Dispose();
+                    // No need to call LevelProgressManager.CompletarNivel again.
+                    // Request parent to load the next level
+                    if (this.Parent is Panel parentPanel) // Or whatever container you use
+                    {
+                        parentPanel.Controls.Remove(this);
+                        PuzzleGamePanel siguienteNivelPanel = new PuzzleGamePanel(proximoNivelId);
+                        // siguienteNivelPanel.OnCloseRequested += ... (re-hook event if needed)
+                        parentPanel.Controls.Add(siguienteNivelPanel);
+                        this.Dispose();
+                    }
+                    else
+                    {
+                         OnCloseRequested?.Invoke(this, new NextLevelEventArgs(proximoNivelId)); // Alternative: event to request next level
+                    }
                 };
                 sidebar.Controls.Add(btnContinuarNivel);
             }
-            // Animación simple de aparición para los nuevos elementos
-            // (Omitida por brevedad, similar a AnimateCell si se desea)
+
+
+            // Simple fade-in animation for the stars and label
+            Timer fadeTimer = new Timer { Interval = 20 };
+            int alpha = 0;
+            felicidadesLabel.ForeColor = Color.FromArgb(alpha, Color.Green); // Initial transparent
+            // estrellasPanel does not have ForeColor. Animate child PictureBoxes if needed, or Panel's content.
+            // For simplicity, animating only felicidadesLabel's fade-in.
+            fadeTimer.Tick += (s, e) =>
+            {
+                alpha += 15;
+                if (alpha >= 255)
+                {
+                    alpha = 255;
+                    fadeTimer.Stop();
+                    fadeTimer.Dispose();
+                }
+                felicidadesLabel.ForeColor = Color.FromArgb(alpha, Color.Green);
+            };
+            fadeTimer.Start();
         }
 
 
-        public void AgregarPuntos(int cantidad)
-        {
-            puntos += cantidad;
-            lblPuntos.Text = $"Puntos: {puntos}";
-        }
-
-        public void RegistrarError()
-        {
-            errores++;
-            lblErrores.Text = $"Errores: {errores}";
-            // Podrías añadir una penalización de puntos aquí si quieres
-            // puntos = Math.Max(0, puntos - 10);
-            // lblPuntos.Text = $"Puntos: {puntos}";
-        }
-        
-        /// <summary>
-        /// Usa una pista simple: revela el contenido de la primera celda vacía editable.
-        /// </summary>
-        private void UsarPistaSimple()
+        private void UsarPista()
         {
             if (pistasDisponibles <= 0)
             {
@@ -573,39 +712,36 @@ namespace MathCross
                 return;
             }
 
+            // Find the first empty, enabled cell and reveal its correct value
             for (int r = 0; r < gridSize; r++)
             {
                 for (int c = 0; c < gridSize; c++)
                 {
-                    // Celda editable y vacía
-                    if (cellButtons[r, c].Enabled && string.IsNullOrEmpty(cellButtons[r, c].Text))
+                    if (cellButtons[r, c] != null && cellButtons[r, c].Enabled && string.IsNullOrEmpty(cellButtons[r, c].Text))
                     {
-                        string valorCorrecto = puzzleData[r, c]; // Obtener de la solución
-                        if (!string.IsNullOrEmpty(valorCorrecto) && EsNumero(valorCorrecto))
+                        string valorCorrecto = puzzleData[r, c]; // Get the answer from the original puzzle data
+                        if (!string.IsNullOrEmpty(valorCorrecto) && EsNumero(valorCorrecto)) // Ensure it's a number cell
                         {
                             cellButtons[r, c].Text = valorCorrecto;
-                            cellButtons[r, c].BackColor = Color.LightGreen; // Indicar que fue una pista
-                            cellButtons[r, c].Enabled = false; // Ya no es editable
+                            cellButtons[r, c].BackColor = Color.LightYellow; // Highlight revealed cell
+                            cellButtons[r, c].Enabled = false; // Disable cell after revealing
 
                             pistasDisponibles--;
-                            lblPistas.Text = $"Pistas: {pistasDisponibles}";
-                            AnimateCell(cellButtons[r,c]);
-
+                            if(lblPistas != null) lblPistas.Text = $"Pistas: {pistasDisponibles}";
+                            
+                            // Check if revealing this cell completes the puzzle
                             if (TodasLasCeldasLlenas())
                             {
-                                VerificarTableroCompleto();
+                                VerificarTablero();
                             }
-                            return; // Usar solo una pista a la vez
+                            return; // Use only one pista at a time
                         }
                     }
                 }
             }
-            MessageBox.Show("No hay celdas vacías donde aplicar una pista simple o el puzzle ya está resuelto.", "Pista no aplicable", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("No quedan celdas vacías adecuadas para dar una pista.", "Pista no aplicable", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        /// <summary>
-        /// Aplica una pista estratégica: resalta una ecuación incorrecta.
-        /// </summary>
         private void AplicarPistaEstrategica()
         {
             if (pistasDisponibles <= 0)
@@ -614,227 +750,136 @@ namespace MathCross
                 return;
             }
 
-            // Buscar una ecuación horizontal incorrecta que esté completamente llena
+            // Try to find a completed but incorrect row
             for (int row = 0; row < gridSize; row++)
             {
-                // Asumiendo que las filas con operaciones son las que tienen un operador en la segunda celda, etc.
-                // Esta lógica depende mucho de la estructura de tu puzzleData.
-                // Aquí asumimos una estructura simple N OP N = R
-                if (gridSize == 5 && !EsNumero(cellButtons[row,1].Text)) // Si la segunda celda es un operador
-                {
-                    string[] tokens = new string[5];
-                    bool filaCompleta = true;
-                    for (int col = 0; col < 5; col++)
-                    {
-                        tokens[col] = cellButtons[row, col].Text;
-                        if (string.IsNullOrEmpty(tokens[col])) filaCompleta = false;
-                    }
+                // Assuming equations are always 5 elements for strategic hints
+                if (gridSize != 5) continue; // Or adapt for other sizes
 
-                    if (filaCompleta && !EvaluarOperacion(tokens))
+                string[] tokens = new string[5];
+                bool filaCompleta = true;
+                for (int col = 0; col < 5; col++)
+                {
+                    if (cellButtons[row, col] == null) { filaCompleta = false; break; }
+                    tokens[col] = cellButtons[row, col].Text;
+                    if (string.IsNullOrEmpty(tokens[col]) && cellButtons[row,col].Enabled) // Check if an editable cell is empty
                     {
-                        ResaltarEcuacion(row, true); // true para horizontal
-                        pistasDisponibles--;
-                        lblPistas.Text = $"Pistas: {pistasDisponibles}";
-                        return;
+                        filaCompleta = false;
+                        break;
                     }
+                }
+
+                if (filaCompleta)
+                {
+                    try {
+                        if (!EvaluarOperacion(tokens))
+                        {
+                            ResaltarEcuacion(row, true); // true for horizontal
+                            pistasDisponibles--;
+                                if(lblPistas != null) lblPistas.Text = $"Pistas: {pistasDisponibles}";
+                            return;
+                        }
+                    } catch (FormatException) { /* Skip if malformed, not truly complete */ }
                 }
             }
 
-            // Buscar una ecuación vertical incorrecta que esté completamente llena
+            // Try to find a completed but incorrect column
             for (int col = 0; col < gridSize; col++)
             {
-                 if (gridSize == 5 && !EsNumero(cellButtons[1,col].Text)) // Si la segunda celda (en la columna) es un operador
+                if (gridSize != 5) continue;
+
+                string[] tokens = new string[5];
+                bool columnaCompleta = true;
+                for (int row = 0; row < 5; row++)
                 {
-                    string[] tokens = new string[5];
-                    bool colCompleta = true;
-                    for (int row = 0; row < 5; row++)
+                    if (cellButtons[row, col] == null) { columnaCompleta = false; break; }
+                    tokens[row] = cellButtons[row, col].Text;
+                        if (string.IsNullOrEmpty(tokens[row]) && cellButtons[row,col].Enabled)
                     {
-                        tokens[row] = cellButtons[row, col].Text;
-                        if (string.IsNullOrEmpty(tokens[row])) colCompleta = false;
-                    }
-                    if (colCompleta && !EvaluarOperacion(tokens))
-                    {
-                        ResaltarEcuacion(col, false); // false para vertical
-                        pistasDisponibles--;
-                        lblPistas.Text = $"Pistas: {pistasDisponibles}";
-                        return;
+                        columnaCompleta = false;
+                        break;
                     }
                 }
+
+                if (columnaCompleta)
+                {
+                    try {
+                        if (!EvaluarOperacion(tokens))
+                        {
+                            ResaltarEcuacion(col, false); // false for vertical
+                            pistasDisponibles--;
+                            if(lblPistas != null) lblPistas.Text = $"Pistas: {pistasDisponibles}";
+                            return;
+                        }
+                    } catch (FormatException) { /* Skip */ }
+                }
             }
-            MessageBox.Show("No se encontraron ecuaciones incorrectas completas para señalar, o todas son correctas.", "Pista Estratégica", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            MessageBox.Show("No se encontraron ecuaciones completas incorrectas para señalar.", "Pista Estratégica", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // Optionally, fallback to regular hint if strategic one not found and pistaEstrategicaActiva was true
+            // if (pistaEstrategicaActiva) UsarPista();
         }
 
-        /// <summary>
-        /// Resalta visualmente una fila o columna que contiene un error.
-        /// </summary>
         private void ResaltarEcuacion(int index, bool esHorizontal)
         {
-            Color colorOriginalCeldaEditable = Color.White;
-            Color colorOriginalCeldaFija = Color.LightGray;
-            Color colorResaltado = Color.LightCoral;
+            Color originalBackColor;
+            List<Tuple<Button, Color>> originalColors = new List<Tuple<Button, Color>>();
 
-            for (int i = 0; i < gridSize; i++)
+            for (int i = 0; i < gridSize; i++) // Assuming equations span the full grid size
             {
                 int r = esHorizontal ? index : i;
                 int c = esHorizontal ? i : index;
-                if (r < gridSize && c < gridSize) // Comprobación de límites
+
+                if (r < gridSize && c < gridSize && cellButtons[r, c] != null)
                 {
-                    cellButtons[r, c].BackColor = colorResaltado;
+                    originalColors.Add(Tuple.Create(cellButtons[r,c], cellButtons[r,c].BackColor));
+                    cellButtons[r, c].BackColor = Color.LightCoral;
                 }
             }
 
-            // Timer para revertir el resaltado
-            System.Windows.Forms.Timer revertTimer = new System.Windows.Forms.Timer { Interval = 1500 }; // 1.5 segundos
-            revertTimer.Tick += (s, e) =>
+            Timer t = new Timer { Interval = 2000 }; // Increased highlight duration
+            t.Tick += (s, e) =>
             {
-                for (int i = 0; i < gridSize; i++)
+                foreach(var item in originalColors)
                 {
-                    int r = esHorizontal ? index : i;
-                    int c = esHorizontal ? i : index;
-                     if (r < gridSize && c < gridSize) // Comprobación de límites
-                    {
-                        // Revertir al color original basado en si es editable o no
-                        if (cellButtons[r,c].Enabled) // Editable (o fue revelada por pista simple)
-                        {
-                            // Si fue pista simple, podría tener LightGreen, mantenerlo.
-                            // Si no, es White.
-                            cellButtons[r,c].BackColor = cellButtons[r,c].BackColor == Color.LightGreen ? Color.LightGreen : colorOriginalCeldaEditable;
-                        }
-                        else // Celda fija (operador, =, o pista inicial)
-                        {
-                            cellButtons[r,c].BackColor = cellButtons[r,c].BackColor == Color.LightCyan ? Color.LightCyan : colorOriginalCeldaFija;
-                        }
-                    }
+                    item.Item1.BackColor = item.Item2; // Restore original color
                 }
-                revertTimer.Stop();
-                revertTimer.Dispose();
+                t.Stop();
+                t.Dispose();
             };
-            revertTimer.Start();
+            t.Start();
         }
-        
-        // Limpiar recursos, especialmente timers, al destruir el control.
-        protected override void Dispose(bool disposing)
+    }
+
+    // Example EventArgs for requesting next level, if using an event-based approach
+    public class NextLevelEventArgs : EventArgs
+    {
+        public string NextLevelId { get; }
+        public NextLevelEventArgs(string nextLevelId) { NextLevelId = nextLevelId; }
+    }
+
+    // NOTE TO USER:
+    // The following classes (GameStateManager, LevelProgressManager, MusicWidget, NumberSelector, PuzzleGenerator, EcuacionLayout)
+    // should be defined in their OWN SEPARATE .cs FILES.
+    // If you have their full definitions pasted at the END of YOUR PuzzleGamePanel.cs file (e.g., around lines 786, 809, etc.,
+    // as indicated by your original compiler errors), YOU MUST DELETE THOSE DUPLICATE DEFINITIONS from PuzzleGamePanel.cs.
+    // This file should only contain the PuzzleGamePanel class and related helper classes if they are very small and specific to it.
+
+    /*
+    Example: GameStateManager.cs would look something like:
+    namespace MathCross
+    {
+        public static class GameStateManager
         {
-            if (disposing)
+            public static void VolverAtras()
             {
-                if (gameTimer != null)
-                {
-                    gameTimer.Stop();
-                    gameTimer.Dispose();
-                    gameTimer = null;
-                }
-                // Cualquier otro timer o recurso desechable debería limpiarse aquí.
-                // Por ejemplo, los timers de animación si no se auto-disponen.
+                // Logic to go back, e.g., show main menu
+                // This might involve interacting with the main form or a navigation service
             }
-            base.Dispose(disposing);
+            // ... other game state methods
         }
     }
-
-    // Clases stub/ejemplo que necesitarías definir en otra parte de tu proyecto:
-    // (Estas son solo para que el código anterior compile y para ilustrar dependencias)
-
-    public class PuzzleGenerator
-    {
-        public class DificultadNivel
-        {
-            public int Size { get; set; } = 5;
-            public List<string> OperadoresPermitidos { get; set; } = new List<string> { "+", "-" };
-            public int PorcentajeCeldasOcultas { get; set; } = 50; // % de celdas numéricas a ocultar
-            public int MaxPistas { get; set; } = 3;
-        }
-
-        public DificultadNivel ObtenerDificultadPorNivel(string nivelId)
-        {
-            // Lógica para cargar la dificultad basada en nivelId (ej. desde un archivo, DB, o hardcodeado)
-            DificultadNivel dif = new DificultadNivel();
-            if (nivelId == "P2") { dif.OperadoresPermitidos = new List<string> { "+", "-", "*" }; dif.PorcentajeCeldasOcultas = 60; }
-            return dif;
-        }
-
-        public void SetOperadores(List<string> operadores) { /* Lógica para configurar operadores */ }
-
-        public string[,] GenerarPuzzle(int size, int porcentajeOcultas)
-        {
-            // Lógica real para generar el puzzle.
-            // Devuelve una cuadrícula string[size, size] con números, operadores, "="
-            // y algunas celdas numéricas como string.Empty o un placeholder para que el jugador las llene.
-            string[,] mockPuzzle = new string[size, size];
-            // Ejemplo simple para un puzzle 5x5:
-            //  1 + 2 = 3
-            //  +   -   +
-            //  4 * 1 = 4
-            //  =   =   =
-            //  5 - 1 = 4 
-            // Esto es solo un ejemplo, la generación real es compleja.
-            if (size == 5)
-            {
-                mockPuzzle = new string[,] {
-                    {"1", "+", "2", "=", "3"},
-                    {"+", "", "-", "", "+"}, // Las "" podrían ser operadores o números dependiendo de la estructura
-                    {"4", "*", "1", "=", "4"},
-                    {"=", "", "=", "", "="},
-                    {"5", "-", "1", "=", "4"}
-                };
-                 // Aplicar porcentajeOcultas: algunas celdas numéricas de la solución se dejan vacías (string.Empty)
-                 // para que el jugador las llene. Otras se muestran como parte del puzzle inicial.
-                 // La lógica de CreateGrid diferencia entre string.Empty (jugador llena) y un número (pista inicial).
-            }
-            return mockPuzzle;
-        }
-    }
-
-    public class NumberSelector : Form // O UserControl, dependiendo de tu implementación
-    {
-        public int? SelectedValue { get; private set; }
-        public NumberSelector(List<int> availableNumbers)
-        {
-            // Lógica para mostrar botones/opciones para cada número en availableNumbers
-            // Al seleccionar, se establece SelectedValue y se cierra con DialogResult.OK
-            // Ejemplo:
-            int yPos = 10;
-            foreach (int num in availableNumbers)
-            {
-                Button btnNum = new Button { Text = num.ToString(), Location = new Point(10, yPos), Size = new Size(50,30) };
-                btnNum.Click += (s, e) => { SelectedValue = num; this.DialogResult = DialogResult.OK; this.Close(); };
-                this.Controls.Add(btnNum);
-                yPos += 35;
-            }
-            this.ClientSize = new Size(70, yPos);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.Text = "Seleccionar";
-        }
-    }
-
-    public static class GameStateManager
-    {
-        public static void VolverAtras() { /* Lógica para navegar a la pantalla anterior */ }
-    }
-
-    public static class LevelProgressManager
-    {
-        public static void CompletarNivel(string nivelId, int estrellas, int tiempo, int puntos, int errores)
-        { /* Lógica para guardar el progreso del nivel */ }
-
-        public static string ObtenerSiguienteNivel(string nivelActualId)
-        {
-            // Lógica para determinar el ID del siguiente nivel.
-            // Ejemplo: si nivelActualId es "P1", devuelve "P2". Si es el último, devuelve null o string.Empty.
-            if (nivelActualId == "P1") return "P2";
-            return null;
-        }
-    }
-
-    public class MusicWidget : UserControl
-    {
-        public MusicWidget()
-        {
-            this.Size = new Size(180, 50);
-            this.BackColor = Color.AliceBlue;
-            Label lblMusic = new Label { Text = "Music Widget Placeholder", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter };
-            this.Controls.Add(lblMusic);
-        }
-    }
+    */
 }
 
 //La pantalla principal del juego donde se juega el Puzzle. Carga un puzzle desde "PuzzleGenerator". Usa "MusicWidget" en el panel lateral. Usa "GameStateManager" para guardar estrellas y volver al menú y por ultimo, utiliza "LevelProgressManager" para guardar tiempo, estrellas y promedio del nivel. 

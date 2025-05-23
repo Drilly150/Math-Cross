@@ -2,420 +2,393 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using MathCross; // Necesario para acceder a GameStateManager, PuzzleGenerator, etc.
 
 namespace MathCross
 {
     public class LevelSelectMenu : UserControl
     {
+        // Clase interna para representar un nivel en el mapa
         private class LevelNode
         {
             public string Name;
             public PointF Position;
-            public float Offset;
+            public float Offset; // Para animación del fondo
             public bool Unlocked;
-            public RectangleF Bounds => new RectangleF(Position.X - 20, Position.Y - 20, 40, 40);
+            public RectangleF Bounds => new RectangleF(Position.X - 20, Position.Y - 20, 40, 40); // Área de clic
             public int Estrellas;
-            public int TiempoPromedio;
-            public int TiempoRecord;
+            public int TiempoPromedio; // Puedes usar un TimeSpan aquí si necesitas más precisión
+            public int TiempoRecord;   // Puedes usar un TimeSpan aquí si necesitas más precisión
             public bool AnimarCompletado = false;
         }
 
+        // Declaración de los Timers con el namespace completo para evitar ambigüedad (CS0104)
+        private System.Windows.Forms.Timer slideIn;
+        private System.Windows.Forms.Timer slideOut;
+        private System.Windows.Forms.Timer animationTimer; // Este ya estaba bien declarado
+
         private List<LevelNode> levels = new List<LevelNode>();
         private Panel infoPanel;
-        private System.Windows.Forms.Timer animationTimer;
-        private System.Windows.Forms.Timer slideInTimer;
-        private System.Windows.Forms.Timer slideOutTimer;
-
+        // private Timer slideIn, slideOut; // ELIMINAR ESTA LÍNEA DUPLICADA Y AMBIGUA
         private int panelTargetX;
-        private LevelNode currentLevelShown;
-        private const int PanelWidth = 250; // Renombrado para mayor claridad PanelWidth en lugar de panelWidth
-        private bool panelVisible = false; // Se conserva para un uso potencial, aunque se puede inferir su estado.
-
+        private LevelNode? currentLevelShown; // Hacerlo anulable para aceptar null
+        private const int panelWidth = 250;
+        private bool panelVisible = false;
+        // private System.Windows.Forms.Timer animationTimer; // Esta línea estaba duplicada
         private float backgroundOffset = 0;
         private Random rand = new Random();
-        private LevelNode selectedNode = null; // Se cambió el nombre de "seleccionado" para mayor claridad.
+        private LevelNode? selected = null; // CAMBIO: Hacerlo anulable (CS8625)
 
         private Button closeButton;
-        private Button btnModoPractica;
-        private MusicWidget musicWidget; // Campo para MusicWidget
+        private Button btnModoPractica; // Solo una declaración
+        private Button btnJugarNivel; // Asumo que este botón existe o se agregará
 
-        // Etiquetas para el panel de InfoPanel
-        private Label lblLevelName, lblLevelStars, lblLevelTime;
-        private Button btnPlayLevel;
+        private string? nivelAResaltar; // CAMBIO: Declarar como anulable (CS8625)
 
-        private string nivelAResaltar;
-        private bool modoPractica = false;
-
-        public event Action OnCloseRequested;
-        public event Action<string> RequestPlayLevel; // Event to signal playing a level
-
-        // El constructor sin parámetros llama al constructor parametrizado con valores predeterminados
-        public LevelSelectMenu() : this(null, false)
+        public LevelSelectMenu()
         {
-        }
+            this.Size = new Size(800, 600); // Tamaño por defecto para el control
+            this.BackColor = Color.FromArgb(40, 40, 40); // Fondo oscuro
+            this.DoubleBuffered = true; // Para evitar parpadeos en el dibujado
 
-        public LevelSelectMenu(string nivelCompletado = null, bool modoPracticaJuego = false)
-        {
-            this.DoubleBuffered = true;
-            this.Dock = DockStyle.Fill;
-            this.BackColor = Color.Black;
-
-            // Inicializar temporizadores
-            animationTimer = new System.Windows.Forms.Timer();
-            slideInTimer = new System.Windows.Forms.Timer();
-            slideOutTimer = new System.Windows.Forms.Timer();
-
-            // Configurar un estado específico a partir de parámetros
-            this.nivelAResaltar = nivelCompletado;
-            this.modoPractica = modoPracticaJuego;
-
-            InitializeControls(); // Inicializar todos los componentes visuales y controladores de eventos
-
-            GenerateLevels(); // Generar niveles después de establecer el estado
-
-            animationTimer.Interval = 30;
-            animationTimer.Tick += AnimationTimer_Tick;
-            animationTimer.Start();
-
-            // Actualizar btnModoPractica según el estado inicial de modoPractica
-            btnModoPractica.BackColor = this.modoPractica ? Color.DeepSkyBlue : Color.LightBlue;
-        }
-
-        private void InitializeControls()
-        {
-            // Botón de cerrar
-            closeButton = new Button()
-            {
-                Text = "❌",
-                Font = new Font("Arial", 10, FontStyle.Bold),
-                Size = new Size(35, 35),
-                Location = new Point(10, 10),
-                BackColor = Color.Gray,
-                FlatStyle = FlatStyle.Flat,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left
-            };
-            closeButton.Click += (s, e) => OnCloseRequested?.Invoke();
-            this.Controls.Add(closeButton);
-
-            // Info Panel
+            // Inicializar infoPanel (simplificado, debes tener una implementación completa)
             infoPanel = new Panel()
             {
-                Size = new Size(PanelWidth, this.Height), // Se ajustará la altura
-                Location = new Point(this.Width, 0), // Comienza oculto fuera de la pantalla.
-                BackColor = Color.FromArgb(30, 30, 30),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right
+                Size = new Size(panelWidth, this.Height),
+                BackColor = Color.FromArgb(60, 60, 60),
+                Location = new Point(this.Width, 0), // Inicialmente fuera de pantalla
+                BorderStyle = BorderStyle.FixedSingle
             };
-
-            lblLevelName = new Label { Location = new Point(10, 20), ForeColor = Color.White, Font = new Font("Arial", 12, FontStyle.Bold), AutoSize = false, Size = new Size(PanelWidth - 20, 20), TextAlign = ContentAlignment.MiddleLeft };
-            lblLevelStars = new Label { Location = new Point(10, 50), ForeColor = Color.White, AutoSize = false, Size = new Size(PanelWidth - 20, 20), TextAlign = ContentAlignment.MiddleLeft };
-            lblLevelTime = new Label { Location = new Point(10, 80), ForeColor = Color.White, AutoSize = false, Size = new Size(PanelWidth - 20, 20), TextAlign = ContentAlignment.MiddleLeft };
-            btnPlayLevel = new Button { Text = "Jugar", Location = new Point(10, 120), Size = new Size(PanelWidth - 20, 30), BackColor = Color.ForestGreen, ForeColor = Color.White, Font = new Font("Arial", 10, FontStyle.Bold) };
-            btnPlayLevel.Click += BtnPlayLevel_Click;
-
-            infoPanel.Controls.Add(lblLevelName);
-            infoPanel.Controls.Add(lblLevelStars);
-            infoPanel.Controls.Add(lblLevelTime);
-            infoPanel.Controls.Add(btnPlayLevel);
             this.Controls.Add(infoPanel);
 
-            // Configuración de temporizadores de diapositivas
-            slideInTimer.Interval = 10;
-            slideInTimer.Tick += SlideInTimer_Tick;
+            // Botón de cerrar para el infoPanel
+            closeButton = new Button()
+            {
+                Text = "X",
+                Font = new Font("Arial", 12, FontStyle.Bold),
+                Size = new Size(30, 30),
+                Location = new Point(panelWidth - 35, 5),
+                BackColor = Color.DarkRed,
+                ForeColor = Color.White
+            };
+            closeButton.Click += (s, e) => HideInfoPanel();
+            infoPanel.Controls.Add(closeButton);
 
-            slideOutTimer.Interval = 10;
-            slideOutTimer.Tick += SlideOutTimer_Tick;
-
-            // Botón de Modo Práctica 
+            // Botón de Modo Práctica
             btnModoPractica = new Button()
             {
-                Text = "Modo práctica libre",
-                Size = new Size(180, 35),
-                // La ubicación se establecerá en OnLoad o dependerá de Anchor
-                Font = new Font("Arial", 10),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
+                Text = "Modo Práctica",
+                Font = new Font("Arial", 12, FontStyle.Bold),
+                Size = new Size(200, 50),
+                Location = new Point(25, infoPanel.Height - 120), // Posición relativa al panel
+                BackColor = Color.FromArgb(80, 80, 80),
+                ForeColor = Color.White
             };
-            btnModoPractica.Click += BtnModoPractica_Click;
-            this.Controls.Add(btnModoPractica);
+            btnModoPractica.Click += (s, e) =>
+            {
+                // Lógica para iniciar modo práctica
+                GameStateManager.NavegarA(new PuzzleGamePanel(0, true)); // Nivel 0 para práctica
+            };
+            infoPanel.Controls.Add(btnModoPractica);
 
-            // Music Widget
-            musicWidget = new MusicWidget();
-            musicWidget.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            this.Controls.Add(musicWidget);
+            // Botón para jugar el nivel seleccionado (si hay uno)
+            btnJugarNivel = new Button()
+            {
+                Text = "Jugar Nivel",
+                Font = new Font("Arial", 12, FontStyle.Bold),
+                Size = new Size(200, 50),
+                Location = new Point(25, infoPanel.Height - 60), // Posición relativa al panel
+                BackColor = Color.LightGreen,
+                ForeColor = Color.Black,
+                Visible = false // Inicialmente oculto
+            };
+            btnJugarNivel.Click += (s, e) =>
+            {
+                if (currentLevelShown != null)
+                {
+                    // Asumo que tu GameStateManager tiene un método para iniciar un nivel
+                    GameStateManager.NavegarA(new PuzzleGamePanel(currentLevelShown.Name)); // Pasa el nombre del nivel
+                }
+            };
+            infoPanel.Controls.Add(btnJugarNivel);
 
+
+            // Configurar los niveles (ejemplo)
+            ConfigurarNiveles();
+
+            // Configuración del Timer de animación (ya estaba bien declarado)
+            animationTimer = new System.Windows.Forms.Timer() { Interval = 50, Enabled = true };
+            animationTimer.Tick += (s, e) =>
+            {
+                backgroundOffset += 0.5f; // Para simular movimiento de fondo
+                Invalidate(); // Redibujar el control
+            };
+
+            // Suscribir eventos de ratón
+            this.Paint += OnPaint;
             this.MouseClick += OnMouseClick;
 
-            this.Load += (s, e) =>
+            // Inicializar Timers de slide-in/out
+            slideIn = new System.Windows.Forms.Timer() { Interval = 10 };
+            slideIn.Tick += SlideInTick;
+
+            slideOut = new System.Windows.Forms.Timer() { Interval = 10 };
+            slideOut.Tick += SlideOutTick;
+
+            // Integración del MusicWidget
+            MusicWidget musicWidget = new MusicWidget()
             {
-                // Establecer ubicaciones que dependen del ancho/alto final
-                btnModoPractica.Location = new Point(this.Width - btnModoPractica.Width - 20, 20);
-                musicWidget.Location = new Point(this.Width - musicWidget.Width - 20, this.Height - musicWidget.Height - 20);
-                infoPanel.Height = this.Height; // Asegúrese de que la altura del panel coincida con la altura del menú
+                Location = new Point(10, 10) // Ajusta la posición según tu diseño
             };
-                this.SizeChanged += (s, e) => {
-                if(infoPanel != null) infoPanel.Height = this.Height; // Mantenga la altura del panel actualizada
-            };
+            this.Controls.Add(musicWidget);
+            musicWidget.BringToFront(); // Asegurarse de que esté visible sobre otros elementos
         }
 
-
-        private void BtnModoPractica_Click(object sender, EventArgs e)
+        private void ConfigurarNiveles()
         {
-            modoPractica = !modoPractica;
-            btnModoPractica.BackColor = modoPractica ? Color.DeepSkyBlue : Color.LightBlue;
-            RecalcularDesbloqueoNiveles();
-            // Invalidate(); // RecalcularDesbloqueoNiveles llama a Invalidar
-        }
+            // Ejemplo de configuración de niveles. Deberías cargar esto desde LevelProgressManager.
+            // Para propósitos de este ejemplo, los creamos directamente.
+            levels.Add(new LevelNode { Name = "Nivel 1", Position = new PointF(100, 100), Unlocked = true, Estrellas = 3, TiempoPromedio = 60, TiempoRecord = 45 });
+            levels.Add(new LevelNode { Name = "Nivel 2", Position = new PointF(250, 150), Unlocked = true, Estrellas = 2, TiempoPromedio = 90, TiempoRecord = 70 });
+            levels.Add(new LevelNode { Name = "Nivel 3", Position = new PointF(400, 200), Unlocked = false, Estrellas = 0, TiempoPromedio = 0, TiempoRecord = 0 });
+            // ... más niveles
 
-        private void AnimationTimer_Tick(object sender, EventArgs e)
-        {
-            Animate();
-        }
-
-        private void SlideInTimer_Tick(object sender, EventArgs e)
-        {
-            if (infoPanel.Left > panelTargetX)
+            // Simula cargar el progreso desde LevelProgressManager
+            foreach (var level in levels)
             {
-                infoPanel.Left = Math.Max(panelTargetX, infoPanel.Left - 25); // Animación un poco más rápida
-            }
-            else
-            {
-                infoPanel.Left = panelTargetX;
-                slideInTimer.Stop();
-                panelVisible = true;
-            }
-        }
-
-        private void SlideOutTimer_Tick(object sender, EventArgs e)
-        {
-            if (infoPanel.Left < this.Width)
-            {
-                infoPanel.Left = Math.Min(this.Width, infoPanel.Left + 25); // Animación un poco más rápida
-            }
-            else
-            {
-                infoPanel.Left = this.Width;
-                slideOutTimer.Stop();
-                panelVisible = false;
-                currentLevelShown = null; // Borrar la selección una vez que el panel esté oculto
-            }
-        }
-
-        private void BtnPlayLevel_Click(object sender, EventArgs e)
-        {
-            if (currentLevelShown != null && currentLevelShown.Unlocked)
-            {
-                RequestPlayLevel?.Invoke(currentLevelShown.Name);
-                HideInfoPanel();
-            }
-        }
-
-
-        private void GenerateLevels()
-        {
-            levels.Clear(); // Limpia los niveles existentes antes de generar nuevos
-            var progreso = LevelProgressManager.Load();
-            var NivelDataCollection = progreso?.Niveles;
-
-            int count = 5; // Número de niveles
-            int spacing = 120; // Espaciado vertical entre niveles
-            int centerX = this.Width / 3; // Posicione los niveles más centralmente, evitando el área inicial del panel de información
-
-            for (int i = 0; i < count; i++)
-            {
-                string id = $"P{i + 1}";
-                NivelDataCollection?.TryGetValue(id, out var data);
-
-                LevelNode newNode = new LevelNode
+                var progress = LevelProgressManager.GetLevelProgress(level.Name);
+                if (progress != null) // CAMBIO: El resultado de GetLevelProgress puede ser null
                 {
-                    Name = id,
-                    Position = new PointF(centerX, 100 + i * spacing),
-                    Offset = (float)(rand.NextDouble() * Math.PI * 2), // Círculo completo para un comienzo diverso
-                    Unlocked = this.modoPractica || (data?.Desbloqueado ?? (i == 0 && !this.modoPractica)), // Primer nivel desbloqueado si no hay datos ni práctica
-                    Estrellas = data?.Estrellas ?? 0,
-                    TiempoRecord = data?.TiempoRecord ?? 0,
-                    TiempoPromedio = data?.TiempoPromedio ?? 0,
-                    AnimarCompletado = false
+                    level.Unlocked = progress.Unlocked;
+                    level.Estrellas = progress.Estrellas;
+                    level.TiempoPromedio = progress.TiempoPromedio;
+                    level.TiempoRecord = progress.TiempoRecord;
+                }
+            }
+        }
+
+        private void ShowInfoPanel(LevelNode level)
+        {
+            // Muestra la información del nivel
+            infoPanel.Controls.Clear(); // Limpiar contenido anterior
+            infoPanel.Controls.Add(closeButton); // Añadir el botón de cerrar de nuevo
+            infoPanel.Controls.Add(btnModoPractica); // Añadir el botón de modo práctica de nuevo
+
+            // Mostrar el botón de jugar nivel si el nivel está desbloqueado
+            btnJugarNivel.Visible = level.Unlocked;
+            infoPanel.Controls.Add(btnJugarNivel);
+
+
+            Label lblNombre = new Label()
+            {
+                Text = level.Name,
+                Font = new Font("Arial", 16, FontStyle.Bold),
+                Location = new Point(10, 40),
+                AutoSize = true,
+                ForeColor = Color.White
+            };
+            infoPanel.Controls.Add(lblNombre);
+
+            Label lblEstado = new Label()
+            {
+                Text = level.Unlocked ? "Estado: Desbloqueado" : "Estado: Bloqueado",
+                Font = new Font("Arial", 10),
+                Location = new Point(10, 70),
+                AutoSize = true,
+                ForeColor = Color.White
+            };
+            infoPanel.Controls.Add(lblEstado);
+
+            if (level.Unlocked)
+            {
+                Label lblEstrellas = new Label()
+                {
+                    Text = $"Estrellas: {level.Estrellas}",
+                    Font = new Font("Arial", 10),
+                    Location = new Point(10, 90),
+                    AutoSize = true,
+                    ForeColor = Color.White
                 };
+                infoPanel.Controls.Add(lblEstrellas);
 
-                if (id == nivelAResaltar)
+                Label lblTiempoPromedio = new Label()
                 {
-                    newNode.AnimarCompletado = true;
-                }
-                levels.Add(newNode);
-            }
-        }
+                    Text = $"Tiempo Promedio: {level.TiempoPromedio}s",
+                    Font = new Font("Arial", 10),
+                    Location = new Point(10, 110),
+                    AutoSize = true,
+                    ForeColor = Color.White
+                };
+                infoPanel.Controls.Add(lblTiempoPromedio);
 
-        private void RecalcularDesbloqueoNiveles()
-        {
-            var progreso = LevelProgressManager.Load();
-            var NivelDataCollection = progreso?.Niveles;
-
-            for (int i = 0; i < levels.Count; i++)
-            {
-                LevelNode currentLevelNode = levels[i];
-                NivelDataCollection?.TryGetValue(currentLevelNode.Name, out var data);
-                currentLevelNode.Unlocked = this.modoPractica || (data?.Desbloqueado ?? (i == 0 && !this.modoPractica));
-            }
-            Invalidate();
-        }
-
-        private void Animate()
-        {
-            backgroundOffset += 0.5f;
-            if (backgroundOffset > float.MaxValue - 100) backgroundOffset = 0; // Prevenir desbordamientos
-
-            for (int i = 0; i < levels.Count; i++)
-            {
-                levels[i].Offset += 0.05f;
-                if (levels[i].Offset > float.MaxValue - 100) levels[i].Offset = 0; // Prevenir desbordamientos
-
-                levels[i].Position = new PointF(
-                    levels[i].Position.X, // La posición X permanece constante a menos que el mapa se desplace
-                    100 + i * 120 + (float)Math.Sin(levels[i].Offset) * 8 // Balanceo ligeramente mayor
-                );
-            }
-            Invalidate();
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e); // Llamar al método base
-            Graphics g = e.Graphics;
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-
-            // Fondo
-            for (int i = 0; i < this.Height; i += 40)
-            {
-                int colorComponentOffset = (int)((i + backgroundOffset) % 80);
-                // Asegúrese de que los componentes de color estén dentro del rango válido [0-255]
-                int red = Math.Min(255, Math.Max(0, 20 + colorComponentOffset));
-                int blue = Math.Min(255, Math.Max(0, 40 + colorComponentOffset));
-                using (Brush b = new SolidBrush(Color.FromArgb(red, 20, blue))) // El componente verde es fijo
+                Label lblTiempoRecord = new Label()
                 {
-                    g.FillRectangle(b, 0, i, this.Width, 40);
-                }
+                    Text = $"Tiempo Récord: {level.TiempoRecord}s",
+                    Font = new Font("Arial", 10),
+                    Location = new Point(10, 130),
+                    AutoSize = true,
+                    ForeColor = Color.White
+                };
+                infoPanel.Controls.Add(lblTiempoRecord);
             }
 
-            // Líneas entre nodos
-            if (levels.Count > 1)
-            {
-                using (Pen linePen = new Pen(Color.FromArgb(150, Color.White), 2)) // Líneas ligeramente transparentes
-                {
-                    for (int i = 0; i < levels.Count - 1; i++)
-                    {
-                        if (levels[i].Unlocked && levels[i+1].Unlocked) // Solo dibuje líneas entre los niveles conectados desbloqueados para mayor claridad
-                            g.DrawLine(linePen, levels[i].Position, levels[i+1].Position);
-                        else if (levels[i].Unlocked && !levels[i+1].Unlocked && !modoPractica) // Opcional: línea al primer nivel bloqueado
-                            g.DrawLine(Pens.DarkSlateGray, levels[i].Position, levels[i+1].Position);
-
-
-                    }
-                }
-            }
-
-            // Nodos
-            foreach (var levelNode in levels) // Se cambió el nombre de la variable de nivel a LevelNode
-            {
-                Color fillColor;
-                if (levelNode.AnimarCompletado)
-                    fillColor = Color.Gold;
-                else if (levelNode.Unlocked)
-                    fillColor = Color.LimeGreen;
-                else
-                    fillColor = Color.DarkGray;
-
-                using (Brush nodeBrush = new SolidBrush(fillColor))
-                using (Pen borderPen = new Pen(Color.White, selectedNode == levelNode ? 3 : 2)) // Usa selectedNode
-                {
-                    g.FillEllipse(nodeBrush, levelNode.Bounds);
-                    g.DrawEllipse(borderPen, levelNode.Bounds);
-                }
-
-                using (Font font = new Font("Arial", 10, FontStyle.Bold))
-                using (Brush textBrush = new SolidBrush(Color.Black))
-                {
-                    SizeF textSize = g.MeasureString(levelNode.Name, font);
-                    g.DrawString(levelNode.Name, font, textBrush,
-                        levelNode.Position.X - textSize.Width / 2,
-                        levelNode.Position.Y - textSize.Height / 2);
-                }
-            }
-        }
-
-        private void ShowInfoPanel(LevelNode node)
-        {
-            if (slideOutTimer.Enabled) slideOutTimer.Stop();
-
-            currentLevelShown = node;
-            lblLevelName.Text = "Nivel: " + node.Name;
-            lblLevelStars.Text = "Estrellas: " + node.Estrellas + "/3"; // Suponiendo 3 estrellas máximo
-            lblLevelTime.Text = "Récord: " + (node.TiempoRecord > 0 ? node.TiempoRecord + "s" : "N/A");
-            
-            infoPanel.Height = this.Height; // Asegúrese de que la altura del panel sea correcta antes de deslizarlo
-            panelTargetX = this.Width - PanelWidth;
-            infoPanel.Visible = true; // Asegúrese de que el panel esté visible antes de comenzar la animación
-            slideInTimer.Start();
+            panelTargetX = this.Width - panelWidth;
+            panelVisible = true;
+            slideIn.Start();
+            currentLevelShown = level; // Guardar el nivel que se está mostrando
         }
 
         private void HideInfoPanel()
         {
-            if (slideInTimer.Enabled) slideInTimer.Stop();
-            
-            // currentLevelShown se establecerá en nulo cuando se complete el deslizamiento.
-            slideOutTimer.Start();
-            // selectedNode = null; // La deselección del nodo se realiza en OnMouseClick o cuando el panel se oculta por completo
-            // Invalidar(); // Redibujar para mostrar el nodo deseleccionado - sucederá a través de OnMouseClick o animación
+            panelTargetX = this.Width;
+            panelVisible = false;
+            slideOut.Start();
+            selected = null; // Deseleccionar cuando se oculta el panel
+            currentLevelShown = null; // Limpiar el nivel mostrado
+            Invalidate(); // Redibujar para que se desmarque el nivel si estaba resaltado
         }
 
-        private void OnMouseClick(object sender, MouseEventArgs e)
+        private void SlideInTick(object sender, EventArgs e)
         {
-            //Comprueba si el clic está dentro del panel de información si está visible
-            if (panelVisible && infoPanel.Bounds.Contains(e.Location))
+            if (infoPanel.Location.X > panelTargetX)
             {
-                // El clic estaba dentro del panel, deja que los controles del panel lo manejen (por ejemplo, el botón de reproducción)
-                return;
+                infoPanel.Location = new Point(Math.Max(panelTargetX, infoPanel.Location.X - 20), infoPanel.Location.Y);
             }
-
-            bool clickedOnNode = false;
-            foreach (var levelNode in levels) // Se cambió el nombre de la variable
+            else
             {
-                if (levelNode.Bounds.Contains(e.Location))
-                {
-                    clickedOnNode = true;
-                    if (levelNode.Unlocked)
-                    {
-                        if (selectedNode == levelNode) // Hizo clic en el nodo ya seleccionado
-                        {
-                            // Opción 1: Ocultar el panel (si el juego permite deseleccionarlo de esta manera)
-                            // HideInfoPanel();
-                            // selectedNode = null;
+                slideIn.Stop();
+                infoPanel.Location = new Point(panelTargetX, infoPanel.Location.Y);
+            }
+        }
 
-                            // Opción 2: O, si se selecciona un nivel, hacer clic en él nuevamente podría significar "Jugar"
-                            // Por ahora, supongamos que puede ser un doble clic accidental, no haga nada o juegue".
-                            //Si se desea reproducir aquí: BtnPlayLevel_Click(null, EventArgs.Empty);
-                        }
-                        else // Hice clic en un nodo nuevo y desbloqueado
-                        {
-                            selectedNode = levelNode;
-                            ShowInfoPanel(levelNode);
-                        }
-                    }
-                    else // Hizo clic en un nodo bloqueado
+        private void SlideOutTick(object sender, EventArgs e)
+        {
+            if (infoPanel.Location.X < panelTargetX)
+            {
+                infoPanel.Location = new Point(Math.Min(panelTargetX, infoPanel.Location.X + 20), infoPanel.Location.Y);
+            }
+            else
+            {
+                slideOut.Stop();
+                infoPanel.Location = new Point(panelTargetX, infoPanel.Location.Y);
+            }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            Graphics g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            // Dibujar fondo animado
+            for (int i = 0; i < this.Width; i += 20)
+            {
+                for (int j = 0; j < this.Height; j += 20)
+                {
+                    float hue = (float)((i + j + backgroundOffset * 5) % 360);
+                    Color color = ColorFromHSL(hue, 0.8f, 0.3f);
+                    using (SolidBrush brush = new SolidBrush(color))
                     {
-                        // Opcionalmente, proporcione comentarios como un sonido de "bloqueo" o una pequeña animación.
-                        if (panelVisible) HideInfoPanel(); // Ocultar el panel si estaba mostrando otro nivel
-                        selectedNode = null; // Deseleccionar cualquier nodo seleccionado previamente
+                        g.FillRectangle(brush, i, j, 20, 20);
                     }
-                    Invalidate(); // Redibujar para mostrar los cambios de selección
-                    break; 
                 }
             }
 
-            if (!clickedOnNode && panelVisible) // Se hizo clic fuera de cualquier nodo mientras el panel estaba visible
+            // Dibujar conexiones entre niveles (ejemplo muy básico)
+            using (Pen linePen = new Pen(Color.Gray, 2))
             {
-                HideInfoPanel();
-                selectedNode = null;
-                Invalidate();
+                // Conectar Nivel 1 con Nivel 2 (ejemplo)
+                if (levels.Count >= 2)
+                {
+                    g.DrawLine(linePen, levels[0].Position, levels[1].Position);
+                }
+            }
+
+
+            // Dibujar los niveles
+            using (Font font = new Font("Arial", 10, FontStyle.Bold))
+            using (SolidBrush textBrush = new SolidBrush(Color.White))
+            using (SolidBrush lockedBrush = new SolidBrush(Color.FromArgb(100, 100, 100))) // Gris oscuro para bloqueado
+            {
+                foreach (var level in levels)
+                {
+                    SolidBrush levelBrush;
+                    if (level == selected)
+                    {
+                        levelBrush = new SolidBrush(Color.Gold); // Resaltar nivel seleccionado
+                    }
+                    else if (level.Unlocked)
+                    {
+                        levelBrush = new SolidBrush(Color.LimeGreen); // Desbloqueado
+                    }
+                    else
+                    {
+                        levelBrush = lockedBrush; // Bloqueado
+                    }
+
+                    g.FillEllipse(levelBrush, level.Bounds);
+                    g.DrawEllipse(Pens.Black, level.Bounds); // Borde
+
+                    SizeF textSize = g.MeasureString(level.Name, font);
+                    g.DrawString(level.Name, font, textBrush,
+                        level.Position.X - textSize.Width / 2,
+                        level.Position.Y - textSize.Height / 2);
+                }
+            }
+        }
+
+        // Método auxiliar para generar color desde HSL (asumo que existe o lo necesitas)
+        private Color ColorFromHSL(float h, float s, float l)
+        {
+            float r, g, b;
+
+            if (s == 0)
+            {
+                r = g = b = l; // achromatic
+            }
+            else
+            {
+                float Hue2RGB(float p, float q, float t)
+                {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1f / 6f) return p + (q - p) * 6f * t;
+                    if (t < 1f / 2f) return q;
+                    if (t < 2f / 3f) return p + (q - p) * (2f / 3f - t) * 6f;
+                    return p;
+                }
+
+                float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                float p = 2 * l - q;
+                r = Hue2RGB(p, q, h + 1f / 3f);
+                g = Hue2RGB(p, q, h);
+                b = Hue2RGB(p, q, h - 1f / 3f);
+            }
+
+            return Color.FromArgb(255, (int)(r * 255), (int)(g * 255), (int)(b * 255));
+        }
+
+
+        private void OnMouseClick(object sender, MouseEventArgs e)
+        {
+            foreach (var level in levels)
+            {
+                if (level.Bounds.Contains(e.Location) && level.Unlocked)
+                {
+                    if (selected == level)
+                    {
+                        HideInfoPanel();
+                        selected = null;
+                    }
+                    else
+                    {
+                        selected = level;
+                        ShowInfoPanel(level);
+                    }
+                    Invalidate();
+                    break;
+                }
             }
         }
     }
